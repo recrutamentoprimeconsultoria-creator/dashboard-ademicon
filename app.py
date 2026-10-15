@@ -6,7 +6,7 @@ from google.oauth2.service_account import Credentials
 import os
 
 # ---------------------------------------------------------
-# 1. Configuração da Página e Estilo Elegante (CSS)
+# 1. Configuração da Página e CSS Corporativo Ademicon
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Dashboard de Credenciamento | Ademicon",
@@ -15,64 +15,63 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# Estilização CSS baseada nas cores oficiais da marca Ademicon
 st.markdown("""
     <style>
+    /* Fundo da aplicação */
     .main {
-        background-color: #f8f9fa;
+        background-color: #f4f6f8;
     }
     
-    .filter-card {
-        background-color: #ffffff;
-        border: 1px solid #e9ecef;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
-        margin-bottom: 25px;
-    }
-
+    /* Cartões de KPI Elegantes e Corporativos */
     [data-testid="stMetric"] {
         background-color: #ffffff;
-        border: 1px solid #e9ecef;
+        border-left: 5px solid #002B49; /* Azul Oficial Ademicon */
+        border-top: 1px solid #e2e8f0;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
         padding: 18px;
-        border-radius: 12px;
+        border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     [data-testid="stMetric"]:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 6px 12px rgba(0, 43, 73, 0.12);
     }
     [data-testid="stMetricValue"] {
         font-size: 2.0rem !important;
         font-weight: 700 !important;
-        color: #0f172a !important;
+        color: #002B49 !important;
     }
     [data-testid="stMetricLabel"] {
-        font-size: 0.9rem !important;
-        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
         color: #64748b !important;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
 
+    /* Títulos e Subtítulos */
     h1, h2, h3 {
-        color: #0f172a;
+        color: #002B49 !important;
         font-weight: 700;
     }
     
+    /* Botões Padrão e de Download */
     .stButton>button, .stDownloadButton>button {
         width: 100%;
         border-radius: 8px;
         font-weight: 600;
-        background-color: #004b87;
-        color: white;
+        background-color: #002B49;
+        color: #ffffff;
         border: none;
         padding: 10px 16px;
-        transition: background-color 0.2s ease;
+        transition: background-color 0.2s ease, transform 0.1s ease;
     }
     .stButton>button:hover, .stDownloadButton>button:hover {
-        background-color: #003366;
-        color: white;
+        background-color: #00406c;
+        color: #ffffff;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -107,12 +106,12 @@ def load_data():
         "https://www.googleapis.com/auth/drive"
     ]
     
-    # 1. Tenta carregar primeiro das Secrets do Streamlit Cloud
+    # 1. Carrega das Secrets do Streamlit Cloud
     if "gcp_service_account" in st.secrets:
         creds_dict = dict(st.secrets["gcp_service_account"])
         credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     else:
-        # 2. Se for localmente no VS Code, carrega da pasta local
+        # 2. Se rodar localmente no VS Code
         json_path = os.path.join(".streamlit", "google_credentials.json")
         if not os.path.exists(json_path):
             raise FileNotFoundError(f"Arquivo de credenciais não encontrado em: {json_path}")
@@ -165,7 +164,7 @@ col_logo, col_titulo = st.columns([1, 4])
 
 with col_logo:
     LOGO_URL = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
-    st.image(LOGO_URL, width=200)
+    st.image(LOGO_URL, width=210)
 
 with col_titulo:
     st.title("📊 Gestão da Rede de Credenciamento")
@@ -174,7 +173,7 @@ with col_titulo:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 4. Painel Horizontal de Filtros de Análise (Na página)
+# 4. Painel Horizontal de Filtros de Análise
 # ---------------------------------------------------------
 st.markdown("### 🔍 Filtros de Análise")
 
@@ -231,9 +230,12 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
 # ---------------------------------------------------------
-# 6. Gráficos Interativos
+# 6. Gráficos Interativos (Cores Corporativas Ademicon)
 # ---------------------------------------------------------
 col_g1, col_g2 = st.columns(2)
+
+# Paleta de cores oficial Ademicon para barras
+ademicon_colors = ['#002B49', '#00406C', '#005691', '#006CB7', '#3389C5', '#66A7D4']
 
 with col_g1:
     st.subheader("🏢 Ativos por Unidade / Praça")
@@ -247,9 +249,9 @@ with col_g1:
             y='Quantidade',
             text='Quantidade',
             color='Unidade',
-            color_discrete_sequence=px.colors.qualitative.Bold
+            color_discrete_sequence=ademicon_colors
         )
-        fig_unid.update_traces(textposition='outside')
+        fig_unid.update_traces(textposition='outside', marker_line_color='#002B49', marker_line_width=1)
         fig_unid.update_layout(
             showlegend=False,
             xaxis_title="",
@@ -271,7 +273,7 @@ with col_g2:
             y='Supervisor / PV',
             orientation='h',
             text='Quantidade',
-            color_discrete_sequence=['#004b87']
+            color_discrete_sequence=['#002B49']
         )
         fig_sup.update_traces(textposition='outside')
         fig_sup.update_layout(
