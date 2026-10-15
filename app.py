@@ -12,18 +12,15 @@ st.set_page_config(
     page_title="Dashboard de Credenciamento | Ademicon",
     page_icon="🏢",
     layout="wide",
-    initial_sidebar_state="collapsed"  # Barra lateral recolhida por padrão
+    initial_sidebar_state="collapsed"
 )
 
-# Estilização CSS para cartões de KPI modernos e painel de filtros principal
 st.markdown("""
     <style>
-    /* Estilização Geral do Fundo */
     .main {
         background-color: #f8f9fa;
     }
     
-    /* Container dos Filtros no Topo */
     .filter-card {
         background-color: #ffffff;
         border: 1px solid #e9ecef;
@@ -33,7 +30,6 @@ st.markdown("""
         margin-bottom: 25px;
     }
 
-    /* Cartões de KPI Elegantes */
     [data-testid="stMetric"] {
         background-color: #ffffff;
         border: 1px solid #e9ecef;
@@ -59,13 +55,11 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
 
-    /* Estilização de Títulos */
     h1, h2, h3 {
         color: #0f172a;
         font-weight: 700;
     }
     
-    /* Estilização de Botões */
     .stButton>button, .stDownloadButton>button {
         width: 100%;
         border-radius: 8px;
@@ -106,31 +100,33 @@ def get_dataframe_from_worksheet(ws):
     
     return pd.DataFrame(data[1:], columns=new_headers)
 
-@st.cache_data(ttl=300)  # Cache de 5 minutos
+@st.cache_data(ttl=300)
 def load_data():
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
     
-    json_path = os.path.join(".streamlit", "google_credentials.json")
-    
-    if not os.path.exists(json_path):
-        raise FileNotFoundError(f"Arquivo de credenciais não encontrado em: {json_path}")
+    # 1. Tenta carregar primeiro das Secrets do Streamlit Cloud
+    if "gcp_service_account" in st.secrets:
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    else:
+        # 2. Se for localmente no VS Code, carrega da pasta local
+        json_path = os.path.join(".streamlit", "google_credentials.json")
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f"Arquivo de credenciais não encontrado em: {json_path}")
+        credentials = Credentials.from_service_account_file(json_path, scopes=scopes)
         
-    credentials = Credentials.from_service_account_file(json_path, scopes=scopes)
     client = gspread.authorize(credentials)
     sheet = client.open_by_url(SHEET_URL)
     
-    # 1. Carregar Aba Matrículas Reais (Ativas)
     ws_ativas = sheet.worksheet("Matriculas real")
     df_ativas = get_dataframe_from_worksheet(ws_ativas)
     
-    # 2. Carregar Aba Matrículas Descredenciadas
     ws_descred = sheet.worksheet("matriculas descredenciadas")
     df_descred = get_dataframe_from_worksheet(ws_descred)
     
-    # Padronização de colunas
     cols_rename = {
         'Matricula': 'Matrícula',
         'NOME CNPJ': 'Razão Social',
@@ -148,7 +144,6 @@ def load_data():
     
     df_total = pd.concat([df_ativas, df_descred], ignore_index=True)
     
-    # Limpeza e padronização dos dados
     if 'Unidade' in df_total.columns:
         df_total['Unidade'] = df_total['Unidade'].astype(str).str.strip().str.upper()
     if 'Supervisor / PV' in df_total.columns:
@@ -160,7 +155,7 @@ try:
     df_raw = load_data()
 except Exception as e:
     st.error(f"⚠️ Erro ao conectar com o Google Sheets: {e}")
-    st.info("Verifique se o arquivo `google_credentials.json` está dentro da pasta `.streamlit` e se compartilhou a planilha com o e-mail da Conta de Serviço.")
+    st.info("Verifique se as credenciais do Google foram configuradas nos Secrets do Streamlit Cloud.")
     st.stop()
 
 # ---------------------------------------------------------
@@ -185,7 +180,6 @@ st.markdown("### 🔍 Filtros de Análise")
 
 col_f_unidade, col_f_supervisor, col_f_btn = st.columns([2, 2, 1])
 
-# Opções do Filtro de Unidades
 if 'Unidade' in df_raw.columns:
     unid_uniquas = [str(u) for u in df_raw['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE', 'NONE']]
     unidades_disponiveis = ["Todas"] + sorted(list(set(unid_uniquas)))
@@ -199,7 +193,6 @@ df_filtrado = df_raw.copy()
 if unidade_sel != "Todas" and 'Unidade' in df_filtrado.columns:
     df_filtrado = df_filtrado[df_filtrado['Unidade'] == unidade_sel]
 
-# Opções do Filtro de Supervisores (Dinâmico conforme a Unidade)
 if 'Supervisor / PV' in df_filtrado.columns:
     sup_unicos = [str(s) for s in df_filtrado['Supervisor / PV'].dropna().unique() if str(s).strip() not in ['', 'NAN', 'NONE', 'NONE']]
     supervisores_disponiveis = ["Todos"] + sorted(list(set(sup_unicos)))
@@ -329,7 +322,6 @@ cols_exibicao = [
 ]
 cols_existentes = [c for c in cols_exibicao if c in df_tabela.columns]
 
-# Geração do arquivo CSV para download dos dados filtrados
 csv_data = df_tabela[cols_existentes].to_csv(index=False).encode('utf-8')
 
 with col_export:
