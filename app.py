@@ -159,48 +159,37 @@ def load_data_previas():
     client = gspread.authorize(credentials)
     sheet = client.open_by_url(SHEET_URL_PREVIAS)
     
-    worksheets = sheet.worksheets()
-    ws_target = None
-    for ws in worksheets:
-        if "previa" in ws.title.lower() or "em previa" in ws.title.lower():
-            ws_target = ws
-            break
-    if ws_target is None:
-        ws_target = worksheets[0]
+    # Acesso direto à aba "Em Previa"
+    try:
+        ws_target = sheet.worksheet("Em Previa")
+    except Exception:
+        ws_target = sheet.worksheet("Em Prévia")
         
     df_previas = get_dataframe_from_worksheet(ws_target)
     
     if df_previas.empty:
         return pd.DataFrame()
         
-    # Mapeamento flexível por posição das colunas se houver ao menos 9 colunas
-    col_mapping = {}
-    current_cols = list(df_previas.columns)
+    # Mapeamento dos cabeçalhos originais da planilha para nomes amigáveis
+    col_mapping = {
+        'Processo': 'Status do Processo',
+        'Atualização Processo': 'Última Atualização',
+        'Matr': 'Matrícula',
+        'Data': 'Data Abertura',
+        'Candidato': 'Candidato',
+        'Whatsapp': 'WhatsApp',
+        'Supervisor': 'Supervisor / PV',
+        'Origem': 'Origem',
+        'Cidade': 'Cidade'
+    }
     
-    standard_names = [
-        'Status do Processo',  # Coluna A
-        'Última Atualização',  # Coluna B
-        'Matrícula',           # Coluna C
-        'Data Abertura',       # Coluna D
-        'Candidato',           # Coluna E
-        'WhatsApp',            # Coluna F
-        'Supervisor / PV',     # Coluna G
-        'Origem',              # Coluna H
-        'Cidade'               # Coluna I
-    ]
-    
-    for i, name in enumerate(standard_names):
-        if i < len(current_cols):
-            col_mapping[current_cols[i]] = name
-            
     df_previas = df_previas.rename(columns=col_mapping)
     
-    # Tratamento de datas
-    for date_col in ['Data Abertura', 'Última Atualização']:
-        if date_col in df_previas.columns:
-            df_previas[date_col] = pd.to_datetime(df_previas[date_col], errors='coerce').dt.strftime('%d/%m/%Y %H:%M').fillna(df_previas[date_col])
-
-    # Limpeza e padronização das strings
+    # Tratamento para limpar sufixos 'h' na coluna de atualização
+    if 'Última Atualização' in df_previas.columns:
+        df_previas['Última Atualização'] = df_previas['Última Atualização'].astype(str).str.replace('h', '', case=False).str.strip()
+    
+    # Limpeza geral de valores nulos/vazios
     for col in df_previas.columns:
         df_previas[col] = df_previas[col].astype(str).str.strip()
         df_previas[col] = df_previas[col].replace(['', 'None', 'NaN', 'none', 'nan', 'NONE', 'NAN'], None)
@@ -240,7 +229,6 @@ if opcao_menu == "📊 Rede de Credenciamento":
     st.caption("Visão consolidada de matrículas ativas e descredenciadas por unidade e supervisor.")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Filtros
     st.markdown("### 🔍 Filtros de Análise")
     col_f_unidade, col_f_supervisor, col_f_btn = st.columns([2, 2, 1])
 
@@ -277,7 +265,6 @@ if opcao_menu == "📊 Rede de Credenciamento":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # KPIs
     tot_ativas = len(df_filtrado[df_filtrado['Status'] == 'Ativo'])
     tot_descred = len(df_filtrado[df_filtrado['Status'] == 'Descredenciado'])
     tot_geral = tot_ativas + tot_descred
@@ -290,7 +277,6 @@ if opcao_menu == "📊 Rede de Credenciamento":
     st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
 
-    # Gráficos
     col_g1, col_g2 = st.columns(2)
     ademicon_colors = ['#002B49', '#00406C', '#005691', '#006CB7', '#3389C5', '#66A7D4']
 
@@ -324,7 +310,6 @@ if opcao_menu == "📊 Rede de Credenciamento":
 
     st.divider()
 
-    # Tabela
     st.subheader("📋 Detalhamento dos Parceiros e Consultores")
     col_aba, col_pesquisa, col_export = st.columns([1, 2, 1])
 
@@ -374,7 +359,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     st.caption("Acompanhamento do status de cadastro e captação de novos parceiros.")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Filtros
     st.markdown("### 🔍 Filtros de Análise do Supervisor")
     col_p_sup, col_p_origem, col_p_btn = st.columns([2, 2, 1])
 
@@ -411,7 +395,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # KPIs
     tot_candidatos = len(df_previas_filt)
     cidades_validas = df_previas_filt['Cidade'].dropna() if 'Cidade' in df_previas_filt.columns else pd.Series()
     cidades_unicas = len(cidades_validas.unique())
@@ -427,7 +410,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
 
-    # Gráficos
     col_pg1, col_pg2 = st.columns(2)
     ademicon_colors = ['#002B49', '#00406C', '#005691', '#006CB7', '#3389C5', '#66A7D4']
 
@@ -461,7 +443,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     st.divider()
 
-    # Tabela
     st.subheader("📋 Funil de Candidatos - Acompanhamento do Supervisor")
     col_p_busca, col_p_export = st.columns([3, 1])
 
@@ -484,7 +465,7 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     csv_p_data = df_p_tabela[cols_finais].to_csv(index=False).encode('utf-8')
 
-    with col_p_export:
+    with col_export:
         st.markdown("<br>", unsafe_allow_html=True)
         st.download_button("📥 Exportar Lista (CSV)", data=csv_p_data, file_name="pipeline_candidatos_previas.csv", mime="text/csv")
 
