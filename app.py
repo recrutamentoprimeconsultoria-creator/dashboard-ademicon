@@ -6,7 +6,7 @@ from google.oauth2.service_account import Credentials
 import os
 
 # ---------------------------------------------------------
-# 1. Configuração da Página e CSS Corporativo Ademicon
+# 1. Configuração da Página e CSS Corporativo Responsivo
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Dashboard de Credenciamento & Prévias | Ademicon",
@@ -77,6 +77,36 @@ st.markdown("""
     }
     [data-testid="stSidebar"] * {
         color: #ffffff !important;
+    }
+
+    /* 📱 OTIMIZAÇÕES ESPECÍFICAS PARA CELULAR (RESPONSIVIDADE) */
+    @media (max-width: 768px) {
+        /* Reduz o tamanho dos títulos principais em telas pequenas para não quebrar o layout */
+        h1 {
+            font-size: 1.5rem !important;
+        }
+        h2 {
+            font-size: 1.3rem !important;
+        }
+        h3 {
+            font-size: 1.1rem !important;
+        }
+        
+        /* Ajusta margens e paddings gerais para aproveitar melhor a tela do celular */
+        .block-container {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            padding-top: 1rem !important;
+        }
+        
+        /* Deixa os KPIs mais compactos no mobile */
+        [data-testid="stMetric"] {
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 1.4rem !important;
+        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -206,7 +236,6 @@ def load_data_previas():
 # 3. Sidebar (Navegação Principal com Logo Centralizada)
 # ---------------------------------------------------------
 with st.sidebar:
-    # Centralização da Logo usando colunas
     _, col_logo, _ = st.columns([1, 4, 1])
     with col_logo:
         LOGO_URL = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
