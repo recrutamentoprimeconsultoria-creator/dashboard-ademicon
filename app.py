@@ -17,6 +17,7 @@ st.set_page_config(
 
 st.markdown("""
     <style>
+    /* Fundo da aplicação */
     .main {
         background-color: #f4f6f8;
     }
@@ -38,7 +39,7 @@ st.markdown("""
         box-shadow: 0 6px 12px rgba(0, 43, 73, 0.12);
     }
     [data-testid="stMetricValue"] {
-        font-size: 2.0rem !important;
+        font-size: 1.8rem !important;
         font-weight: 700 !important;
         color: #002B49 !important;
     }
@@ -160,7 +161,6 @@ def load_data_previas():
     client = gspread.authorize(credentials)
     sheet = client.open_by_url(SHEET_URL_PREVIAS)
     
-    # Busca a aba exata ou pega a primeira disponível na planilha
     worksheets = sheet.worksheets()
     ws_target = None
     for ws in worksheets:
@@ -172,18 +172,28 @@ def load_data_previas():
         
     df_previas = get_dataframe_from_worksheet(ws_target)
     
-    cols_rename = {
-        'Matricula': 'Matrícula',
-        'NOME CNPJ': 'Razão Social',
-        'Ponto Venda (Supervisor)': 'Supervisor / PV',
-        'Unidade': 'Unidade',
-        'Pessoa Física': 'Consultor (PF)',
-        'Email Ademicon': 'E-mail'
-    }
-    df_previas = df_previas.rename(columns=cols_rename)
+    # Mapeamento exato das Colunas A até I conforme estrutura informada
+    if len(df_previas.columns) >= 9:
+        mapping = {
+            df_previas.columns[0]: 'Status do Processo',
+            df_previas.columns[1]: 'Última Atualização',
+            df_previas.columns[2]: 'Matrícula',
+            df_previas.columns[3]: 'Data Abertura',
+            df_previas.columns[4]: 'Candidato',
+            df_previas.columns[5]: 'WhatsApp',
+            df_previas.columns[6]: 'Supervisor / PV',
+            df_previas.columns[7]: 'Origem',
+            df_previas.columns[8]: 'Cidade'
+        }
+        df_previas = df_previas.rename(columns=mapping)
     
-    if 'Unidade' in df_previas.columns:
-        df_previas['Unidade'] = df_previas['Unidade'].astype(str).str.strip().str.upper()
+    # Tratamento e Formatação das Datas (para o padrão PT-BR DD/MM/AAAA)
+    for date_col in ['Data Abertura', 'Última Atualização']:
+        if date_col in df_previas.columns:
+            df_previas[date_col] = pd.to_datetime(df_previas[date_col], errors='coerce').dt.strftime('%d/%m/%Y %H:%M').fillna(df_previas[date_col])
+
+    if 'Cidade' in df_previas.columns:
+        df_previas['Cidade'] = df_previas['Cidade'].astype(str).str.strip().str.upper()
     if 'Supervisor / PV' in df_previas.columns:
         df_previas['Supervisor / PV'] = df_previas['Supervisor / PV'].astype(str).str.strip()
         
@@ -200,7 +210,7 @@ with st.sidebar:
     
     opcao_menu = st.radio(
         "Selecione o Módulo:",
-        ["📊 Rede de Credenciamento", "📋 Prévias"]
+        ["📊 Rede de Credenciamento", "📋 Prévias (Gestão de Candidatos)"]
     )
     st.markdown("---")
     st.caption("Ademicon - Gestão Corporativa")
@@ -340,108 +350,109 @@ if opcao_menu == "📊 Rede de Credenciamento":
 
 
 # ---------------------------------------------------------
-# MÓDULO 2: PRÉVIAS
+# MÓDULO 2: PRÉVIAS (GESTÃO TÁTICA DE CANDIDATOS)
 # ---------------------------------------------------------
-elif opcao_menu == "📋 Prévias":
+elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     try:
         df_previas_raw = load_data_previas()
     except Exception as e:
         st.error(f"⚠️ Erro ao conectar com a planilha de Prévias: {e}")
-        st.info("Verifique se compartilhou a nova planilha com o e-mail: streamlit-ademicon@dashboard-ademicon.iam.gserviceaccount.com")
         st.stop()
 
-    st.title("📋 Gestão de Prévias")
-    st.caption("Acompanhamento detalhado das matrículas na fase 'Em Prévia'.")
+    st.title("📋 Gestão de Prévias (Pipeline de Candidatos)")
+    st.caption("Acompanhamento do status de cadastro e captação de novos parceiros.")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Filtros
-    st.markdown("### 🔍 Filtros de Análise")
-    col_p_unidade, col_p_supervisor, col_p_btn = st.columns([2, 2, 1])
+    # Filtros Focados para o Supervisor
+    st.markdown("### 🔍 Filtros de Análise do Supervisor")
+    col_p_sup, col_p_origem, col_p_btn = st.columns([2, 2, 1])
 
-    if 'Unidade' in df_previas_raw.columns:
-        unid_uniquas_p = [str(u) for u in df_previas_raw['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE']]
-        unidades_previas = ["Todas"] + sorted(list(set(unid_uniquas_p)))
-    else:
-        unidades_previas = ["Todas"]
-
-    with col_p_unidade:
-        unidade_p_sel = st.selectbox("📍 Praça / Unidade:", unidades_previas, key="p_unid")
-
-    df_previas_filt = df_previas_raw.copy()
-    if unidade_p_sel != "Todas" and 'Unidade' in df_previas_filt.columns:
-        df_previas_filt = df_previas_filt[df_previas_filt['Unidade'] == unidade_p_sel]
-
-    if 'Supervisor / PV' in df_previas_filt.columns:
-        sup_unicos_p = [str(s) for s in df_previas_filt['Supervisor / PV'].dropna().unique() if str(s).strip() not in ['', 'NAN', 'NONE']]
+    if 'Supervisor / PV' in df_previas_raw.columns:
+        sup_unicos_p = [str(s) for s in df_previas_raw['Supervisor / PV'].dropna().unique() if str(s).strip() not in ['', 'NAN', 'NONE']]
         supervisores_previas = ["Todos"] + sorted(list(set(sup_unicos_p)))
     else:
         supervisores_previas = ["Todos"]
 
-    with col_p_supervisor:
-        supervisor_p_sel = st.selectbox("👔 Supervisor / Ponto de Venda:", supervisores_previas, key="p_sup")
+    with col_p_sup:
+        supervisor_p_sel = st.selectbox("👔 Selecione seu nome (Supervisor):", supervisores_previas, key="p_sup_sel")
 
+    df_previas_filt = df_previas_raw.copy()
     if supervisor_p_sel != "Todos" and 'Supervisor / PV' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Supervisor / PV'] == supervisor_p_sel]
 
+    if 'Origem' in df_previas_filt.columns:
+        orig_unicas = [str(o) for o in df_previas_filt['Origem'].dropna().unique() if str(o).strip() not in ['', 'NAN', 'NONE']]
+        origens_previas = ["Todas"] + sorted(list(set(orig_unicas)))
+    else:
+        origens_previas = ["Todas"]
+
+    with col_p_origem:
+        origem_sel = st.selectbox("🎯 Origem do Candidato:", origens_previas, key="p_origem_sel")
+
+    if origem_sel != "Todas" and 'Origem' in df_previas_filt.columns:
+        df_previas_filt = df_previas_filt[df_previas_filt['Origem'] == origem_sel]
+
     with col_p_btn:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔄 Atualizar Dados", key="p_btn"):
+        if st.button("🔄 Atualizar Dados", key="p_btn_refresh"):
             st.cache_data.clear()
             st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # KPI Prévias
-    tot_previas = len(df_previas_filt)
-    kpi_p1, kpi_p2 = st.columns(2)
-    kpi_p1.metric("Total de Prévias", f"{tot_previas:,}".replace(",", "."))
-    
-    praças_impactadas = len(df_previas_filt['Unidade'].unique()) if 'Unidade' in df_previas_filt.columns else 0
-    kpi_p2.metric("Praças com Prévias", f"{praças_impactadas}")
+    # KPIs de Pipeline de Entrada
+    tot_candidatos = len(df_previas_filt)
+    cidades_unicas = len(df_previas_filt['Cidade'].unique()) if 'Cidade' in df_previas_filt.columns else 0
+    top_origem = df_previas_filt['Origem'].mode()[0] if ('Origem' in df_previas_filt.columns and not df_previas_filt.empty) else "N/I"
+
+    kpi_p1, kpi_p2, kpi_p3 = st.columns(3)
+    kpi_p1.metric("Candidatos em Prévia", f"{tot_candidatos:,}".replace(",", "."))
+    kpi_p2.metric("Cidades de Origem", f"{cidades_unicas}")
+    kpi_p3.metric("Principal Origem", f"{top_origem}")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
 
-    # Gráficos
+    # Gráficos Táticos para Supervisores
     col_pg1, col_pg2 = st.columns(2)
     ademicon_colors = ['#002B49', '#00406C', '#005691', '#006CB7', '#3389C5', '#66A7D4']
 
     with col_pg1:
-        st.subheader("🏢 Prévias por Unidade / Praça")
-        if 'Unidade' in df_previas_filt.columns and not df_previas_filt.empty:
-            df_p_unid = df_previas_filt['Unidade'].value_counts().reset_index()
-            df_p_unid.columns = ['Unidade', 'Quantidade']
+        st.subheader("📊 Candidatos por Status do Processo")
+        if 'Status do Processo' in df_previas_filt.columns and not df_previas_filt.empty:
+            df_st = df_previas_filt['Status do Processo'].value_counts().reset_index()
+            df_st.columns = ['Status do Processo', 'Quantidade']
             
-            fig_p_unid = px.bar(
-                df_p_unid, x='Unidade', y='Quantidade', text='Quantidade',
-                color='Unidade', color_discrete_sequence=ademicon_colors
+            fig_st = px.bar(
+                df_st, x='Status do Processo', y='Quantidade', text='Quantidade',
+                color='Status do Processo', color_discrete_sequence=ademicon_colors
             )
-            fig_p_unid.update_traces(textposition='outside', marker_line_color='#002B49', marker_line_width=1)
-            fig_p_unid.update_layout(showlegend=False, xaxis_title="", yaxis_title="Total Prévias", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig_p_unid, use_container_width=True)
+            fig_st.update_traces(textposition='outside', marker_line_color='#002B49', marker_line_width=1)
+            fig_st.update_layout(showlegend=False, xaxis_title="", yaxis_title="Candidatos", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+            st.plotly_chart(fig_st, use_container_width=True)
 
     with col_pg2:
-        st.subheader("👔 Top Supervisores / PVs (Prévias)")
-        if 'Supervisor / PV' in df_previas_filt.columns and not df_previas_filt.empty:
-            df_p_sup = df_previas_filt['Supervisor / PV'].value_counts().head(10).reset_index()
-            df_p_sup.columns = ['Supervisor / PV', 'Quantidade']
+        st.subheader("🎯 Distribuição por Origem (Captação)")
+        if 'Origem' in df_previas_filt.columns and not df_previas_filt.empty:
+            df_orig = df_previas_filt['Origem'].value_counts().reset_index()
+            df_orig.columns = ['Origem', 'Quantidade']
             
-            fig_p_sup = px.bar(
-                df_p_sup, x='Quantidade', y='Supervisor / PV', orientation='h',
-                text='Quantidade', color_discrete_sequence=['#002B49']
+            fig_orig = px.pie(
+                df_orig, values='Quantidade', names='Origem',
+                color_discrete_sequence=ademicon_colors, hole=0.4
             )
-            fig_p_sup.update_traces(textposition='outside')
-            fig_p_sup.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Total Prévias", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig_p_sup, use_container_width=True)
+            fig_orig.update_traces(textinfo='percent+label')
+            fig_orig.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+            st.plotly_chart(fig_orig, use_container_width=True)
 
     st.divider()
 
-    # Tabela Prévias
-    st.subheader("📋 Detalhamento das Prévias")
+    # Tabela Tática de Acompanhamento do Supervisor
+    st.subheader("📋 Funil de Candidatos - Acompanhamento do Supervisor")
     col_p_busca, col_p_export = st.columns([3, 1])
 
     with col_p_busca:
-        termo_p_busca = st.text_input("🔎 Pesquisar na tabela de Prévias:")
+        termo_p_busca = st.text_input("🔎 Pesquisar Candidato, Status, WhatsApp ou Cidade:")
 
     df_p_tabela = df_previas_filt.copy()
     if termo_p_busca:
@@ -451,10 +462,16 @@ elif opcao_menu == "📋 Prévias":
             mascara |= df_p_tabela[col].astype(str).str.contains(termo_p_busca, case=False, na=False)
         df_p_tabela = df_p_tabela[mascara]
 
-    csv_p_data = df_p_tabela.to_csv(index=False).encode('utf-8')
+    cols_ordem_supervisor = [
+        'Status do Processo', 'Candidato', 'WhatsApp', 'Supervisor / PV',
+        'Origem', 'Cidade', 'Data Abertura', 'Última Atualização', 'Matrícula'
+    ]
+    cols_finais = [c for c in cols_ordem_supervisor if c in df_p_tabela.columns]
+
+    csv_p_data = df_p_tabela[cols_finais].to_csv(index=False).encode('utf-8')
 
     with col_p_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar CSV (Prévias)", data=csv_p_data, file_name="previas_ademicon.csv", mime="text/csv")
+        st.download_button("📥 Exportar Lista (CSV)", data=csv_p_data, file_name="pipeline_candidatos_previas.csv", mime="text/csv")
 
-    st.dataframe(df_p_tabela, use_container_width=True, hide_index=True)
+    st.dataframe(df_p_tabela[cols_finais], use_container_width=True, hide_index=True)
