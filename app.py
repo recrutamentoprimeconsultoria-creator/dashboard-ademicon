@@ -76,35 +76,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Coordenadas geográficas aproximadas dos municípios do Estado do Rio de Janeiro
-COORDENADAS_RJ = {
-    'RIO DE JANEIRO': (-22.9068, -43.1729),
-    'NITERÓI': (-22.8833, -43.1036),
-    'SÃO GONÇALO': (-22.8268, -43.0539),
-    'DUQUE DE CAXIAS': (-22.7856, -43.3117),
-    'NOVA IGUAÇU': (-22.7592, -43.4511),
-    'PETRÓPOLIS': (-22.5050, -43.1789),
-    'TERESÓPOLIS': (-22.4123, -42.9656),
-    'NOVA FRIBURGO': (-22.2819, -42.5311),
-    'CABO FRIO': (-22.8892, -42.0268),
-    'MACAÉ': (-22.3708, -41.7869),
-    'CAMPOS DOS GOYTACAZES': (-21.7545, -41.3244),
-    'VOLTA REDONDA': (-22.5231, -44.1042),
-    'BARRA MANSA': (-22.5442, -44.1714),
-    'ANGRA DOS REIS': (-23.0067, -44.3181),
-    'RESENDE': (-22.4689, -44.4497),
-    'MARICÁ': (-22.9192, -42.8186),
-    'ITABORAÍ': (-22.7444, -42.8594),
-    'SÃO JOÃO DE MERITI': (-22.8036, -43.3725),
-    'NILÓPOLIS': (-22.8081, -43.4144),
-    'BELFORD ROXO': (-22.7642, -43.3997),
-    'ARARUAMA': (-22.8728, -42.3425),
-    'SAQUAREMA': (-22.9203, -42.5103),
-    'SÃO PEDRO DA ALDEIA': (-22.8394, -42.1006),
-    'BÚZIOS': (-22.7469, -41.8817),
-    'ARMÇÃO DOS BÚZIOS': (-22.7469, -41.8817)
-}
-
 # ---------------------------------------------------------
 # 2. Carregamento e Tratamento de Dados (Google Sheets)
 # ---------------------------------------------------------
@@ -240,7 +211,7 @@ with col_f_btn:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# 5. Indicadores Principais (KPIs - Sem Taxa de Retenção)
+# 5. Indicadores Principais (KPIs)
 # ---------------------------------------------------------
 tot_ativas = len(df_filtrado[df_filtrado['Status'] == 'Ativo'])
 tot_descred = len(df_filtrado[df_filtrado['Status'] == 'Descredenciado'])
@@ -255,7 +226,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.divider()
 
 # ---------------------------------------------------------
-# 6. Gráficos Interativos e Mapa do Rio de Janeiro
+# 6. Gráficos Interativos (Cores Corporativas Ademicon)
 # ---------------------------------------------------------
 col_g1, col_g2 = st.columns(2)
 
@@ -308,51 +279,6 @@ with col_g2:
             paper_bgcolor="rgba(0,0,0,0)"
         )
         st.plotly_chart(fig_sup, use_container_width=True)
-
-st.divider()
-
-# ---------------------------------------------------------
-# Mapa do Estado do Rio de Janeiro (Bolhas por Praça/Cidade)
-# ---------------------------------------------------------
-st.subheader("🗺️ Mapeamento Geográfico da Rede - Estado do Rio de Janeiro")
-
-if 'Unidade' in df_filtrado.columns:
-    df_mapa = df_filtrado[df_filtrado['Status'] == 'Ativo']['Unidade'].value_counts().reset_index()
-    df_mapa.columns = ['Unidade', 'Quantidade']
-    
-    # Mapear latitude e longitude de cada município
-    df_mapa['lat'] = df_mapa['Unidade'].map(lambda u: COORDENADAS_RJ.get(u, (-22.9068, -43.1729))[0])
-    df_mapa['lon'] = df_mapa['Unidade'].map(lambda u: COORDENADAS_RJ.get(u, (-22.9068, -43.1729))[1])
-    
-    fig_mapa = px.scatter_geo(
-        df_mapa,
-        lat="lat",
-        lon="lon",
-        size="Quantidade",
-        color="Quantidade",
-        hover_name="Unidade",
-        hover_data={"Quantidade": True, "lat": False, "lon": False},
-        color_continuous_scale=["#3389C5", "#002B49"],
-        size_max=35,
-        fitbounds="locations"
-    )
-    fig_mapa.update_geos(
-        fitbounds="locations",
-        visible=True,
-        showcountries=False,
-        showcoastlines=True,
-        showland=True,
-        landcolor="#f4f6f8",
-        showlakes=True,
-        lakecolor="#ffffff"
-    )
-    fig_mapa.update_layout(
-        margin={"r": 0, "t": 10, "l": 0, "b": 10},
-        height=450,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)"
-    )
-    st.plotly_chart(fig_mapa, use_container_width=True)
 
 st.divider()
 
