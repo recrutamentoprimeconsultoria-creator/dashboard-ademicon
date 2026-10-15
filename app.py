@@ -193,7 +193,6 @@ def load_data_previas():
     if 'Cidade' in df_previas.columns:
         df_previas['Cidade'] = df_previas['Cidade'].str.upper()
 
-    # REMOVE LINHAS VAZIAS OU COM NONE NAS COLUNAS PRINCIPAIS
     if 'Candidato' in df_previas.columns and 'Status do Processo' in df_previas.columns:
         df_previas = df_previas.dropna(subset=['Candidato', 'Status do Processo'])
         df_previas = df_previas[
@@ -214,22 +213,22 @@ with st.sidebar:
     
     opcao_menu = st.radio(
         "Selecione o Módulo:",
-        ["📊 Rede de Credenciamento", "📋 Prévias (Gestão de Candidatos)"]
+        ["📈 Matrículas Concluídas", "📋 Prévias (Gestão de Candidatos)"]
     )
     st.markdown("---")
     st.caption("Ademicon - Gestão Corporativa")
 
 # ---------------------------------------------------------
-# MÓDULO 1: REDE DE CREDENCIAMENTO
+# MÓDULO 1: MATRÍCULAS CONCLUÍDAS
 # ---------------------------------------------------------
-if opcao_menu == "📊 Rede de Credenciamento":
+if opcao_menu == "📈 Matrículas Concluídas":
     try:
         df_raw = load_data_cred()
     except Exception as e:
         st.error(f"⚠️ Erro ao conectar com o Google Sheets: {e}")
         st.stop()
 
-    st.title("📊 Gestão da Rede de Credenciamento")
+    st.title("📈 Matrículas Concluídas")
     st.caption("Visão consolidada de matrículas ativas e descredenciadas por unidade e supervisor.")
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -363,87 +362,87 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     st.caption("Acompanhamento do status de cadastro e captação de novos parceiros.")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    st.markdown("### 🔍 Filtros de Análise do Supervisor")
-    col_p_sup, col_p_origem, col_p_btn = st.columns([2, 2, 1])
+    st.markdown("### 🔍 Filtros de Análise")
+    
+    # NOVOS FILTROS SOLICITADOS: Supervisor, Cidade e Status do Processo
+    col_p1, col_p2, col_p3, col_p4 = st.columns([2, 2, 2, 1])
 
+    # 1. Filtro Supervisor
     if 'Supervisor / PV' in df_previas_raw.columns:
         sup_unicos_p = [str(s) for s in df_previas_raw['Supervisor / PV'].dropna().unique() if str(s).strip() != '']
         supervisores_previas = ["Todos"] + sorted(list(set(sup_unicos_p)))
     else:
         supervisores_previas = ["Todos"]
 
-    with col_p_sup:
-        supervisor_p_sel = st.selectbox("👔 Selecione seu nome (Supervisor):", supervisores_previas, key="p_sup_sel")
+    with col_p1:
+        supervisor_p_sel = st.selectbox("👔 Supervisor:", supervisores_previas, key="p_sup_sel")
 
     df_previas_filt = df_previas_raw.copy()
     if supervisor_p_sel != "Todos" and 'Supervisor / PV' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Supervisor / PV'] == supervisor_p_sel]
 
-    if 'Origem' in df_previas_filt.columns:
-        orig_unicas = [str(o) for o in df_previas_filt['Origem'].dropna().unique() if str(o).strip() != '']
-        origens_previas = ["Todas"] + sorted(list(set(orig_unicas)))
+    # 2. Filtro Cidade
+    if 'Cidade' in df_previas_filt.columns:
+        cid_unicas = [str(c) for c in df_previas_filt['Cidade'].dropna().unique() if str(c).strip() != '']
+        cidades_previas = ["Todas"] + sorted(list(set(cid_unicas)))
     else:
-        origens_previas = ["Todas"]
+        cidades_previas = ["Todas"]
 
-    with col_p_origem:
-        origem_sel = st.selectbox("🎯 Origem do Candidato:", origens_previas, key="p_origem_sel")
+    with col_p2:
+        cidade_sel = st.selectbox("📍 Cidade:", cidades_previas, key="p_cid_sel")
 
-    if origem_sel != "Todas" and 'Origem' in df_previas_filt.columns:
-        df_previas_filt = df_previas_filt[df_previas_filt['Origem'] == origem_sel]
+    if cidade_sel != "Todas" and 'Cidade' in df_previas_filt.columns:
+        df_previas_filt = df_previas_filt[df_previas_filt['Cidade'] == cidade_sel]
 
-    with col_p_btn:
+    # 3. Filtro Status do Processo
+    if 'Status do Processo' in df_previas_filt.columns:
+        status_unicos = [str(st_p) for st_p in df_previas_filt['Status do Processo'].dropna().unique() if str(st_p).strip() != '']
+        status_previas = ["Todos"] + sorted(list(set(status_unicos)))
+    else:
+        status_previas = ["Todos"]
+
+    with col_p3:
+        status_sel = st.selectbox("📌 Status do Processo:", status_previas, key="p_status_sel")
+
+    if status_sel != "Todos" and 'Status do Processo' in df_previas_filt.columns:
+        df_previas_filt = df_previas_filt[df_previas_filt['Status do Processo'] == status_sel]
+
+    # 4. Botão de Atualizar
+    with col_p4:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🔄 Atualizar Dados", key="p_btn_refresh"):
+        if st.button("🔄 Atualizar", key="p_btn_refresh"):
             st.cache_data.clear()
             st.rerun()
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # KPIS (Apenas 2 cartões limpos conforme solicitado)
     tot_candidatos = len(df_previas_filt)
     cidades_validas = df_previas_filt['Cidade'].dropna() if 'Cidade' in df_previas_filt.columns else pd.Series()
     cidades_unicas = len(cidades_validas.unique())
-    
-    origem_validas = df_previas_filt['Origem'].dropna() if 'Origem' in df_previas_filt.columns else pd.Series()
-    top_origem = origem_validas.mode()[0] if not origem_validas.empty else "N/I"
 
-    kpi_p1, kpi_p2, kpi_p3 = st.columns(3)
+    kpi_p1, kpi_p2 = st.columns(2)
     kpi_p1.metric("Candidatos em Prévia", f"{tot_candidatos:,}".replace(",", "."))
     kpi_p2.metric("Cidades de Origem", f"{cidades_unicas}")
-    kpi_p3.metric("Principal Origem", f"{top_origem}")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
 
-    col_pg1, col_pg2 = st.columns(2)
+    # GRÁFICO ÚNICO: Candidatos por Status do Processo em destaque total
     ademicon_colors = ['#002B49', '#00406C', '#005691', '#006CB7', '#3389C5', '#66A7D4']
-
-    with col_pg1:
-        st.subheader("📊 Candidatos por Status do Processo")
-        if 'Status do Processo' in df_previas_filt.columns and not df_previas_filt.empty:
-            df_st = df_previas_filt['Status do Processo'].dropna().value_counts().reset_index()
-            df_st.columns = ['Status do Processo', 'Quantidade']
-            
-            fig_st = px.bar(
-                df_st, x='Status do Processo', y='Quantidade', text='Quantidade',
-                color='Status do Processo', color_discrete_sequence=ademicon_colors
-            )
-            fig_st.update_traces(textposition='outside', marker_line_color='#002B49', marker_line_width=1)
-            fig_st.update_layout(showlegend=False, xaxis_title="", yaxis_title="Candidatos", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig_st, use_container_width=True)
-
-    with col_pg2:
-        st.subheader("🎯 Distribuição por Origem (Captação)")
-        if 'Origem' in df_previas_filt.columns and not df_previas_filt.empty:
-            df_orig = df_previas_filt['Origem'].dropna().value_counts().reset_index()
-            df_orig.columns = ['Origem', 'Quantidade']
-            
-            fig_orig = px.pie(
-                df_orig, values='Quantidade', names='Origem',
-                color_discrete_sequence=ademicon_colors, hole=0.4
-            )
-            fig_orig.update_traces(textinfo='percent+label')
-            fig_orig.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig_orig, use_container_width=True)
+    
+    st.subheader("📊 Candidatos por Status do Processo")
+    if 'Status do Processo' in df_previas_filt.columns and not df_previas_filt.empty:
+        df_st = df_previas_filt['Status do Processo'].dropna().value_counts().reset_index()
+        df_st.columns = ['Status do Processo', 'Quantidade']
+        
+        fig_st = px.bar(
+            df_st, x='Status do Processo', y='Quantidade', text='Quantidade',
+            color='Status do Processo', color_discrete_sequence=ademicon_colors
+        )
+        fig_st.update_traces(textposition='outside', marker_line_color='#002B49', marker_line_width=1)
+        fig_st.update_layout(showlegend=False, xaxis_title="", yaxis_title="Candidatos", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig_st, use_container_width=True)
 
     st.divider()
 
