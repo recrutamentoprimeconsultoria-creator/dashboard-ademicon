@@ -203,20 +203,24 @@ def load_data_previas():
     return df_previas
 
 # ---------------------------------------------------------
-# 3. Sidebar (Navegação Principal)
+# 3. Sidebar (Navegação Principal com Logo Centralizada)
 # ---------------------------------------------------------
 with st.sidebar:
-    LOGO_URL = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
-    st.image(LOGO_URL, width=180)
+    # Centralização da Logo usando colunas
+    _, col_logo, _ = st.columns([1, 4, 1])
+    with col_logo:
+        LOGO_URL = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
+        st.image(LOGO_URL, width=170)
+        
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("### 📌 Navegação")
+    st.markdown("### 📌 Gente & Gestão")
     
     opcao_menu = st.radio(
         "Selecione o Módulo:",
         ["📈 Matrículas Concluídas", "📋 Prévias (Gestão de Candidatos)"]
     )
     st.markdown("---")
-    st.caption("Ademicon - Gestão Corporativa")
+    st.caption("Fabio Pelegrino - Head de Pessoas")
 
 # ---------------------------------------------------------
 # MÓDULO 1: MATRÍCULAS CONCLUÍDAS
@@ -364,7 +368,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     st.markdown("### 🔍 Filtros de Análise")
     
-    # NOVOS FILTROS SOLICITADOS: Supervisor, Cidade e Status do Processo
     col_p1, col_p2, col_p3, col_p4 = st.columns([2, 2, 2, 1])
 
     # 1. Filtro Supervisor
@@ -416,7 +419,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # KPIS (Apenas 2 cartões limpos conforme solicitado)
     tot_candidatos = len(df_previas_filt)
     cidades_validas = df_previas_filt['Cidade'].dropna() if 'Cidade' in df_previas_filt.columns else pd.Series()
     cidades_unicas = len(cidades_validas.unique())
@@ -428,7 +430,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
 
-    # GRÁFICO ÚNICO: Candidatos por Status do Processo em destaque total
     ademicon_colors = ['#002B49', '#00406C', '#005691', '#006CB7', '#3389C5', '#66A7D4']
     
     st.subheader("📊 Candidatos por Status do Processo")
