@@ -170,33 +170,39 @@ def load_data_previas():
     if ws_target is None:
         ws_target = worksheets[0]
         
-    df_previas = get_dataframe_from_worksheet(ws_target)
+    data = ws_target.get_all_values()
+    if not data or len(data) <= 1:
+        return pd.DataFrame()
+        
+    df_raw = pd.DataFrame(data)
     
-    # Mapeamento exato das Colunas A até I conforme estrutura informada
-    if len(df_previas.columns) >= 9:
-        mapping = {
-            df_previas.columns[0]: 'Status do Processo',
-            df_previas.columns[1]: 'Última Atualização',
-            df_previas.columns[2]: 'Matrícula',
-            df_previas.columns[3]: 'Data Abertura',
-            df_previas.columns[4]: 'Candidato',
-            df_previas.columns[5]: 'WhatsApp',
-            df_previas.columns[6]: 'Supervisor / PV',
-            df_previas.columns[7]: 'Origem',
-            df_previas.columns[8]: 'Cidade'
-        }
-        df_previas = df_previas.rename(columns=mapping)
+    # Mapeamento dinâmico por posição da coluna (Colunas A até I)
+    col_names = [
+        'Status do Processo',  # A
+        'Última Atualização',  # B
+        'Matrícula',           # C
+        'Data Abertura',       # D
+        'Candidato',           # E
+        'WhatsApp',            # F
+        'Supervisor / PV',     # G
+        'Origem',              # H
+        'Cidade'               # I
+    ]
     
-    # Tratamento e Formatação das Datas (para o padrão PT-BR DD/MM/AAAA)
-    for date_col in ['Data Abertura', 'Última Atualização']:
-        if date_col in df_previas.columns:
-            df_previas[date_col] = pd.to_datetime(df_previas[date_col], errors='coerce').dt.strftime('%d/%m/%Y %H:%M').fillna(df_previas[date_col])
+    # Pega apenas os dados (pulando a primeira linha de cabeçalho da planilha)
+    df_previas = pd.DataFrame(df_raw.values[1:], columns=col_names + list(df_raw.columns[9:]))
+    
+    # Limpeza e padronização
+    for col in df_previas.columns:
+        df_previas[col] = df_previas[col].astype(str).str.strip()
+        df_previas[col] = df_previas[col].replace(['', 'None', 'NaN', 'none', 'nan', 'NONE', 'NAN'], None)
+    
+    # Filtra linhas vazias (sem candidato nem status)
+    df_previas = df_previas.dropna(subset=['Status do Processo', 'Candidato'], how='all')
 
     if 'Cidade' in df_previas.columns:
-        df_previas['Cidade'] = df_previas['Cidade'].astype(str).str.strip().str.upper()
-    if 'Supervisor / PV' in df_previas.columns:
-        df_previas['Supervisor / PV'] = df_previas['Supervisor / PV'].astype(str).str.strip()
-        
+        df_previas['Cidade'] = df_previas['Cidade'].str.upper()
+
     return df_previas
 
 # ---------------------------------------------------------
@@ -363,12 +369,12 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     st.caption("Acompanhamento do status de cadastro e captação de novos parceiros.")
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Filtros Focados para o Supervisor
+    # Filtros
     st.markdown("### 🔍 Filtros de Análise do Supervisor")
     col_p_sup, col_p_origem, col_p_btn = st.columns([2, 2, 1])
 
     if 'Supervisor / PV' in df_previas_raw.columns:
-        sup_unicos_p = [str(s) for s in df_previas_raw['Supervisor / PV'].dropna().unique() if str(s).strip() not in ['', 'NAN', 'NONE']]
+        sup_unicos_p = [str(s) for s in df_previas_raw['Supervisor / PV'].dropna().unique() if str(s).strip() != '']
         supervisores_previas = ["Todos"] + sorted(list(set(sup_unicos_p)))
     else:
         supervisores_previas = ["Todos"]
@@ -381,7 +387,7 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
         df_previas_filt = df_previas_filt[df_previas_filt['Supervisor / PV'] == supervisor_p_sel]
 
     if 'Origem' in df_previas_filt.columns:
-        orig_unicas = [str(o) for o in df_previas_filt['Origem'].dropna().unique() if str(o).strip() not in ['', 'NAN', 'NONE']]
+        orig_unicas = [str(o) for o in df_previas_filt['Origem'].dropna().unique() if str(o).strip() != '']
         origens_previas = ["Todas"] + sorted(list(set(orig_unicas)))
     else:
         origens_previas = ["Todas"]
@@ -400,10 +406,13 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # KPIs de Pipeline de Entrada
+    # KPIs
     tot_candidatos = len(df_previas_filt)
-    cidades_unicas = len(df_previas_filt['Cidade'].unique()) if 'Cidade' in df_previas_filt.columns else 0
-    top_origem = df_previas_filt['Origem'].mode()[0] if ('Origem' in df_previas_filt.columns and not df_previas_filt.empty) else "N/I"
+    cidades_validas = df_previas_filt['Cidade'].dropna() if 'Cidade' in df_previas_filt.columns else pd.Series()
+    cidades_unicas = len(cidades_validas.unique())
+    
+    origem_validas = df_previas_filt['Origem'].dropna() if 'Origem' in df_previas_filt.columns else pd.Series()
+    top_origem = origem_validas.mode()[0] if not origem_validas.empty else "N/I"
 
     kpi_p1, kpi_p2, kpi_p3 = st.columns(3)
     kpi_p1.metric("Candidatos em Prévia", f"{tot_candidatos:,}".replace(",", "."))
@@ -413,14 +422,14 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     st.markdown("<br>", unsafe_allow_html=True)
     st.divider()
 
-    # Gráficos Táticos para Supervisores
+    # Gráficos
     col_pg1, col_pg2 = st.columns(2)
     ademicon_colors = ['#002B49', '#00406C', '#005691', '#006CB7', '#3389C5', '#66A7D4']
 
     with col_pg1:
         st.subheader("📊 Candidatos por Status do Processo")
         if 'Status do Processo' in df_previas_filt.columns and not df_previas_filt.empty:
-            df_st = df_previas_filt['Status do Processo'].value_counts().reset_index()
+            df_st = df_previas_filt['Status do Processo'].dropna().value_counts().reset_index()
             df_st.columns = ['Status do Processo', 'Quantidade']
             
             fig_st = px.bar(
@@ -434,7 +443,7 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     with col_pg2:
         st.subheader("🎯 Distribuição por Origem (Captação)")
         if 'Origem' in df_previas_filt.columns and not df_previas_filt.empty:
-            df_orig = df_previas_filt['Origem'].value_counts().reset_index()
+            df_orig = df_previas_filt['Origem'].dropna().value_counts().reset_index()
             df_orig.columns = ['Origem', 'Quantidade']
             
             fig_orig = px.pie(
@@ -447,7 +456,7 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     st.divider()
 
-    # Tabela Tática de Acompanhamento do Supervisor
+    # Tabela
     st.subheader("📋 Funil de Candidatos - Acompanhamento do Supervisor")
     col_p_busca, col_p_export = st.columns([3, 1])
 
