@@ -193,6 +193,14 @@ def load_data_previas():
     if 'Cidade' in df_previas.columns:
         df_previas['Cidade'] = df_previas['Cidade'].str.upper()
 
+    # REMOVE LINHAS VAZIAS OU COM NONE NAS COLUNAS PRINCIPAIS
+    if 'Candidato' in df_previas.columns and 'Status do Processo' in df_previas.columns:
+        df_previas = df_previas.dropna(subset=['Candidato', 'Status do Processo'])
+        df_previas = df_previas[
+            (df_previas['Candidato'].str.lower() != 'none') & 
+            (df_previas['Status do Processo'].str.lower() != 'none')
+        ]
+
     return df_previas
 
 # ---------------------------------------------------------
@@ -441,7 +449,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     st.subheader("📋 Funil de Candidatos - Acompanhamento do Supervisor")
     
-    # DEFINIÇÃO CORRETA DAS COLUNAS DE BUSCA E EXPORTAÇÃO
     col_p_busca, col_p_export = st.columns([3, 1])
 
     with col_p_busca:
