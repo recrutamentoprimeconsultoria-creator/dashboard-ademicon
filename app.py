@@ -89,20 +89,18 @@ SHEET_URL_PREVIAS = "https://docs.google.com/spreadsheets/d/1jqq3qqdojoWPBSWn4Ln
 
 def get_dataframe_from_worksheet(ws):
     data = ws.get_all_values()
-    if not data:
+    if not data or len(data) == 0:
         return pd.DataFrame()
-    headers = data[0]
+    headers = [str(h).strip() if str(h).strip() != "" else f"Coluna_{i+1}" for i, h in enumerate(data[0])]
     seen = {}
     new_headers = []
-    for i, h in enumerate(headers):
-        h_str = str(h).strip() if str(h).strip() != "" else f"Coluna_{i+1}"
-        if h_str in seen:
-            seen[h_str] += 1
-            new_headers.append(f"{h_str}_{seen[h_str]}")
+    for h in headers:
+        if h in seen:
+            seen[h] += 1
+            new_headers.append(f"{h}_{seen[h]}")
         else:
-            seen[h_str] = 0
-            new_headers.append(h_str)
-    
+            seen[h] = 0
+            new_headers.append(h)
     return pd.DataFrame(data[1:], columns=new_headers)
 
 @st.cache_data(ttl=300)
@@ -164,42 +162,49 @@ def load_data_previas():
     worksheets = sheet.worksheets()
     ws_target = None
     for ws in worksheets:
-        if "previa" in ws.title.lower():
+        if "previa" in ws.title.lower() or "em previa" in ws.title.lower():
             ws_target = ws
             break
     if ws_target is None:
         ws_target = worksheets[0]
         
-    data = ws_target.get_all_values()
-    if not data or len(data) <= 1:
+    df_previas = get_dataframe_from_worksheet(ws_target)
+    
+    if df_previas.empty:
         return pd.DataFrame()
         
-    df_raw = pd.DataFrame(data)
+    # Mapeamento flexível por posição das colunas se houver ao menos 9 colunas
+    col_mapping = {}
+    current_cols = list(df_previas.columns)
     
-    # Mapeamento dinâmico por posição da coluna (Colunas A até I)
-    col_names = [
-        'Status do Processo',  # A
-        'Última Atualização',  # B
-        'Matrícula',           # C
-        'Data Abertura',       # D
-        'Candidato',           # E
-        'WhatsApp',            # F
-        'Supervisor / PV',     # G
-        'Origem',              # H
-        'Cidade'               # I
+    standard_names = [
+        'Status do Processo',  # Coluna A
+        'Última Atualização',  # Coluna B
+        'Matrícula',           # Coluna C
+        'Data Abertura',       # Coluna D
+        'Candidato',           # Coluna E
+        'WhatsApp',            # Coluna F
+        'Supervisor / PV',     # Coluna G
+        'Origem',              # Coluna H
+        'Cidade'               # Coluna I
     ]
     
-    # Pega apenas os dados (pulando a primeira linha de cabeçalho da planilha)
-    df_previas = pd.DataFrame(df_raw.values[1:], columns=col_names + list(df_raw.columns[9:]))
+    for i, name in enumerate(standard_names):
+        if i < len(current_cols):
+            col_mapping[current_cols[i]] = name
+            
+    df_previas = df_previas.rename(columns=col_mapping)
     
-    # Limpeza e padronização
+    # Tratamento de datas
+    for date_col in ['Data Abertura', 'Última Atualização']:
+        if date_col in df_previas.columns:
+            df_previas[date_col] = pd.to_datetime(df_previas[date_col], errors='coerce').dt.strftime('%d/%m/%Y %H:%M').fillna(df_previas[date_col])
+
+    # Limpeza e padronização das strings
     for col in df_previas.columns:
         df_previas[col] = df_previas[col].astype(str).str.strip()
         df_previas[col] = df_previas[col].replace(['', 'None', 'NaN', 'none', 'nan', 'NONE', 'NAN'], None)
     
-    # Filtra linhas vazias (sem candidato nem status)
-    df_previas = df_previas.dropna(subset=['Status do Processo', 'Candidato'], how='all')
-
     if 'Cidade' in df_previas.columns:
         df_previas['Cidade'] = df_previas['Cidade'].str.upper()
 
