@@ -159,7 +159,6 @@ def load_data_previas():
     client = gspread.authorize(credentials)
     sheet = client.open_by_url(SHEET_URL_PREVIAS)
     
-    # Acesso direto à aba "Em Previa"
     try:
         ws_target = sheet.worksheet("Em Previa")
     except Exception:
@@ -170,7 +169,6 @@ def load_data_previas():
     if df_previas.empty:
         return pd.DataFrame()
         
-    # Mapeamento dos cabeçalhos originais da planilha para nomes amigáveis
     col_mapping = {
         'Processo': 'Status do Processo',
         'Atualização Processo': 'Última Atualização',
@@ -185,11 +183,9 @@ def load_data_previas():
     
     df_previas = df_previas.rename(columns=col_mapping)
     
-    # Tratamento para limpar sufixos 'h' na coluna de atualização
     if 'Última Atualização' in df_previas.columns:
         df_previas['Última Atualização'] = df_previas['Última Atualização'].astype(str).str.replace('h', '', case=False).str.strip()
     
-    # Limpeza geral de valores nulos/vazios
     for col in df_previas.columns:
         df_previas[col] = df_previas[col].astype(str).str.strip()
         df_previas[col] = df_previas[col].replace(['', 'None', 'NaN', 'none', 'nan', 'NONE', 'NAN'], None)
@@ -444,6 +440,8 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     st.divider()
 
     st.subheader("📋 Funil de Candidatos - Acompanhamento do Supervisor")
+    
+    # DEFINIÇÃO CORRETA DAS COLUNAS DE BUSCA E EXPORTAÇÃO
     col_p_busca, col_p_export = st.columns([3, 1])
 
     with col_p_busca:
@@ -465,8 +463,8 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     csv_p_data = df_p_tabela[cols_finais].to_csv(index=False).encode('utf-8')
 
-    with col_export:
+    with col_p_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar Lista (CSV)", data=csv_p_data, file_name="pipeline_candidatos_previas.csv", mime="text/csv")
+        st.download_button("📥 Exportar Lista (CSV)", data=csv_p_data, file_name="pipeline_candidatos_previas.csv", mime="text/css")
 
     st.dataframe(df_p_tabela[cols_finais], use_container_width=True, hide_index=True)
