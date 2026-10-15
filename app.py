@@ -160,10 +160,18 @@ def load_data_previas():
     client = gspread.authorize(credentials)
     sheet = client.open_by_url(SHEET_URL_PREVIAS)
     
-    ws_previas = sheet.worksheet("Em Previa")
-    df_previas = get_dataframe_from_worksheet(ws_previas)
+    # Busca a aba exata ou pega a primeira disponível na planilha
+    worksheets = sheet.worksheets()
+    ws_target = None
+    for ws in worksheets:
+        if "previa" in ws.title.lower():
+            ws_target = ws
+            break
+    if ws_target is None:
+        ws_target = worksheets[0]
+        
+    df_previas = get_dataframe_from_worksheet(ws_target)
     
-    # Tratamento de colunas padrão se existirem
     cols_rename = {
         'Matricula': 'Matrícula',
         'NOME CNPJ': 'Razão Social',
@@ -339,7 +347,7 @@ elif opcao_menu == "📋 Prévias":
         df_previas_raw = load_data_previas()
     except Exception as e:
         st.error(f"⚠️ Erro ao conectar com a planilha de Prévias: {e}")
-        st.info("Verifique se compartilhou a nova planilha com o e-mail da Conta de Serviço.")
+        st.info("Verifique se compartilhou a nova planilha com o e-mail: streamlit-ademicon@dashboard-ademicon.iam.gserviceaccount.com")
         st.stop()
 
     st.title("📋 Gestão de Prévias")
