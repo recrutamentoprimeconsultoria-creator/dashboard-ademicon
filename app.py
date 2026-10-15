@@ -324,7 +324,7 @@ if 'Unidade' in df_filtrado.columns:
     df_mapa['lat'] = df_mapa['Unidade'].map(lambda u: COORDENADAS_RJ.get(u, (-22.9068, -43.1729))[0])
     df_mapa['lon'] = df_mapa['Unidade'].map(lambda u: COORDENADAS_RJ.get(u, (-22.9068, -43.1729))[1])
     
-    fig_mapa = px.scatter_mapbox(
+    fig_mapa = px.scatter_geo(
         df_mapa,
         lat="lat",
         lon="lon",
@@ -334,13 +334,23 @@ if 'Unidade' in df_filtrado.columns:
         hover_data={"Quantidade": True, "lat": False, "lon": False},
         color_continuous_scale=["#3389C5", "#002B49"],
         size_max=35,
-        zoom=7.5,
-        center={"lat": -22.5, "lon": -43.0},
-        mapbox_style="open-street-map"
+        fitbounds="locations"
+    )
+    fig_mapa.update_geos(
+        fitbounds="locations",
+        visible=True,
+        showcountries=False,
+        showcoastlines=True,
+        showland=True,
+        landcolor="#f4f6f8",
+        showlakes=True,
+        lakecolor="#ffffff"
     )
     fig_mapa.update_layout(
         margin={"r": 0, "t": 10, "l": 0, "b": 10},
-        height=450
+        height=450,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
     )
     st.plotly_chart(fig_mapa, use_container_width=True)
 
