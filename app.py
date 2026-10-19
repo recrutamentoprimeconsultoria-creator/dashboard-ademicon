@@ -160,32 +160,44 @@ def load_data_cred():
         df_total['Unidade'] = df_total['Unidade'].astype(str).str.strip().str.upper()
     if 'Supervisor / PV' in df_total.columns:
         df_total['Supervisor / PV'] = df_total['Supervisor / PV'].astype(str).str.strip()
-    if 'Matrícula' in df_total.columns:
-        df_total['Matrícula'] = df_total['Matrícula'].astype(str).str.strip()
+    if 'Consultor (PF)' in df_total.columns:
+        df_total['Consultor_Match'] = df_total['Consultor (PF)'].astype(str).str.strip().str.lower()
 
-    # 2. Carregar Planilha de Cursos (Consultor de Sucesso)
+    # 2. Carregar Planilha de Cursos (Consultor de Sucesso) cruzando pela Coluna B (Nome) e Coluna E (Status)
     try:
         sheet_curso = client.open_by_url(SHEET_URL_CURSO)
-        ws_curso = sheet_curso.get_worksheet(0) # Pega a primeira aba
-        df_curso = get_dataframe_from_worksheet(ws_curso)
+        ws_curso = sheet_curso.get_worksheet(0)
         
-        # Identifica a matrícula e a coluna E (status do curso)
-        if len(df_curso.columns) >= 5:
-            col_mat_curso = df_curso.columns[0] # Geralmente a matrícula está na primeira coluna
-            col_status_curso = df_curso.columns[4] # Coluna E
+        # Pega todos os valores crus para garantir acesso exato às colunas B (índice 1) e E (índice 4)
+        dados_curso = ws_curso.get_all_values()
+        if len(dados_curso) > 1:
+            lista_cursos = []
+            for linha in dados_curso[1:]: # Ignora o cabeçalho
+                if len(linha) >= 5:
+                    nome_pessoa = str(linha[1]).strip() # Coluna B
+                    status_curso = str(linha[4]).strip() # Coluna E
+                    if nome_pessoa and nome_pessoa.lower() not in ['', 'none', 'nan']:
+                        lista_cursos.append({
+                            'Consultor_Match': nome_pessoa.lower(),
+                            'Consultor de Sucesso': status_curso if status_curso else 'Pendente'
+                        })
             
-            df_curso = df_curso[[col_mat_curso, col_status_curso]].copy()
-            df_curso.columns = ['Matrícula', 'Consultor de Sucesso']
-            df_curso['Matrícula'] = df_curso['Matrícula'].astype(str).str.strip()
-            df_curso['Consultor de Sucesso'] = df_curso['Consultor de Sucesso'].astype(str).str.strip().replace(['', 'None', 'nan'], 'Pendente')
-            
-            # Junta com a tabela principal de matrículas
-            df_total = pd.merge(df_total, df_curso, on='Matrícula', how='left')
-            df_total['Consultor de Sucesso'] = df_total['Consultor de Sucesso'].fillna('Pendente')
+            df_curso = pd.DataFrame(lista_cursos)
+            if not df_curso.empty:
+                # Remove duplicadas se houver
+                df_curso = df_curso.drop_duplicates(subset=['Consultor_Match'])
+                df_total = pd.merge(df_total, df_curso, on='Consultor_Match', how='left')
+                df_total['Consultor de Sucesso'] = df_total['Consultor de Sucesso'].fillna('Pendente')
+            else:
+                df_total['Consultor de Sucesso'] = 'Pendente'
         else:
             df_total['Consultor de Sucesso'] = 'Pendente'
     except Exception:
         df_total['Consultor de Sucesso'] = 'Pendente'
+
+    # Remove a coluna auxiliar de match se existir
+    if 'Consultor_Match' in df_total.columns:
+        df_total = df_total.drop(columns=['Consultor_Match'])
     
     return df_total
 
@@ -306,7 +318,6 @@ if opcao_menu == "📈 Matrículas Concluídas":
     if supervisor_sel != "Todos" and 'Supervisor / PV' in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado['Supervisor / PV'] == supervisor_sel]
 
-    # Novo filtro para o Curso Consultor de Sucesso
     with col_f_curso:
         curso_sel = st.selectbox("🎓 Consultor de Sucesso:", ["Todos", "Concluído", "Pendente"])
 
@@ -517,6 +528,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     with col_p_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar Lista (CSV)", data=csv_p_data, file_name="pipeline_candidatos_previas.csv", mime="text/csv")
+        st.download_button("📥 Exportar Lista (CSV)", data=csv_p_data, file_name="pipeline_candidatos_previas.csv", mime="text/css")
 
     st.dataframe(df_p_tabela[cols_finais], use_container_width=True, hide_index=True)
