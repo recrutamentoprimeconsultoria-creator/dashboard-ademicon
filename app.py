@@ -168,14 +168,13 @@ def load_data_cred():
         sheet_curso = client.open_by_url(SHEET_URL_CURSO)
         ws_curso = sheet_curso.get_worksheet(0)
         
-        # Pega todos os valores crus para garantir acesso exato às colunas B (índice 1) e E (índice 4)
         dados_curso = ws_curso.get_all_values()
         if len(dados_curso) > 1:
             lista_cursos = []
-            for linha in dados_curso[1:]: # Ignora o cabeçalho
+            for linha in dados_curso[1:]:
                 if len(linha) >= 5:
-                    nome_pessoa = str(linha[1]).strip() # Coluna B
-                    status_curso = str(linha[4]).strip() # Coluna E
+                    nome_pessoa = str(linha[1]).strip()
+                    status_curso = str(linha[4]).strip()
                     if nome_pessoa and nome_pessoa.lower() not in ['', 'none', 'nan']:
                         lista_cursos.append({
                             'Consultor_Match': nome_pessoa.lower(),
@@ -184,7 +183,6 @@ def load_data_cred():
             
             df_curso = pd.DataFrame(lista_cursos)
             if not df_curso.empty:
-                # Remove duplicadas se houver
                 df_curso = df_curso.drop_duplicates(subset=['Consultor_Match'])
                 df_total = pd.merge(df_total, df_curso, on='Consultor_Match', how='left')
                 df_total['Consultor de Sucesso'] = df_total['Consultor de Sucesso'].fillna('Pendente')
@@ -195,7 +193,6 @@ def load_data_cred():
     except Exception:
         df_total['Consultor de Sucesso'] = 'Pendente'
 
-    # Remove a coluna auxiliar de match se existir
     if 'Consultor_Match' in df_total.columns:
         df_total = df_total.drop(columns=['Consultor_Match'])
     
@@ -410,6 +407,74 @@ if opcao_menu == "📈 Matrículas Concluídas":
         st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/csv")
 
     st.dataframe(df_tabela[cols_existentes], use_container_width=True, hide_index=True)
+
+    # -------------------------------------------------------------------------
+    # NOVO MÓDULO GERENCIAL: ACOMPANHAMENTO DE CURSOS OBRIGATÓRIOS POR UNIDADE
+    # -------------------------------------------------------------------------
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.divider()
+    st.subheader("🎓 Painel Gerencial: Status do Curso Obrigatório (Consultor de Sucesso)")
+    st.caption("Foque em uma unidade específica para validar os profissionais concluídos e pendentes.")
+
+    # Filtro exclusivo de Unidade para este painel gerencial
+    col_mg_unidade, _ = st.columns([2, 2])
+    if 'Unidade' in df_raw.columns:
+        unid_gerencial_list = ["Todas"] + sorted([str(u) for u in df_raw['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE']])
+    else:
+        unid_gerencial_list = ["Todas"]
+
+    with col_mg_unidade:
+        unidade_gerencial_sel = st.selectbox("📍 Filtrar Unidade para Análise de Cursos:", unid_gerencial_list, key="mg_unidade_sel")
+
+    df_mg = df_raw.copy()
+    if unidade_gerencial_sel != "Todas" and 'Unidade' in df_mg.columns:
+        df_mg = df_mg[df_mg['Unidade'] == unidade_gerencial_sel]
+
+    # Cálculos dos KPIs de Cursos
+    total_unid_curso = len(df_mg)
+    total_concluidos = len(df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'concluído'])
+    total_pendentes = len(df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'pendente'])
+    taxa_conclusao = (total_concluidos / total_unid_curso * 100) if total_unid_curso > 0 else 0
+
+    mg_kpi1, mg_kpi2, mg_kpi3, mg_kpi4 = st.columns(4)
+    mg_kpi1.metric("Colaboradores na Unidade", f"{total_unid_curso}")
+    mg_kpi2.metric("Cursos Concluídos", f"{total_concluidos}")
+    mg_kpi3.metric("Cursos Pendentes", f"{total_pendentes}")
+    mg_kpi4.metric("Taxa de Conclusão", f"{taxa_conclusao:.1f}%")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Gráfico de Pizza / Rosca e Visão Detalhada
+    col_mg_graf, col_mg_detalhe = st.columns(2)
+
+    with col_mg_graf:
+        st.subheader("📊 Proporção de Conclusão")
+        if total_unid_curso > 0 and 'Consultor de Sucesso' in df_mg.columns:
+            df_curso_count = df_mg['Consultor de Sucesso'].value_counts().reset_index()
+            df_curso_count.columns = ['Status do Curso', 'Quantidade']
+            
+            fig_donut = px.pie(
+                df_curso_count, values='Quantidade', names='Status do Curso',
+                color='Status do Curso',
+                color_discrete_map={'Concluído': '#002B49', 'Pendente': '#e2e8f0'},
+                hole=0.5
+            )
+            fig_donut.update_traces(textinfo='percent+label', textfont_size=14)
+            fig_donut.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
+            st.plotly_chart(fig_donut, use_container_width=True)
+        else:
+            st.info("Nenhum dado encontrado para os filtros selecionados.")
+
+    with col_mg_detalhe:
+        st.subheader("👥 Lista Nominal (Pendentes & Concluídos)")
+        if not df_mg.empty and 'Consultor de Sucesso' in df_mg.columns:
+            # Exibe tabela compacta para o gestor auditar rapidamente
+            cols_mg_tabela = ['Consultor (PF)', 'Razão Social', 'Supervisor / PV', 'Consultor de Sucesso']
+            cols_mg_existentes = [c for c in cols_mg_tabela if c in df_mg.columns]
+            
+            # Ordena colocando os Pendentes no topo para facilitar a cobrança do gestor
+            df_mg_ordenado = df_mg.sort_values(by='Consultor de Sucesso', ascending=False)
+            st.dataframe(df_mg_ordenado[cols_mg_existentes], use_container_width=True, hide_index=True, height=300)
 
 
 # ---------------------------------------------------------
