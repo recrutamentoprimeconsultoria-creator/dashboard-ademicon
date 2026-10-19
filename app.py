@@ -409,46 +409,47 @@ if opcao_menu == "📈 Matrículas Concluídas":
     st.dataframe(df_tabela[cols_existentes], use_container_width=True, hide_index=True)
 
     # -------------------------------------------------------------------------
-    # NOVO MÓDULO GERENCIAL: ACOMPANHAMENTO DE CURSOS OBRIGATÓRIOS POR UNIDADE
+    # PAINEL GERENCIAL DE CURSOS OBRIGATÓRIOS (APENAS ATIVOS)
     # -------------------------------------------------------------------------
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.divider()
-    st.subheader("🎓 Painel Gerencial: Status do Curso Obrigatório (Consultor de Sucesso)")
-    st.caption("Foque em uma unidade específica para validar os profissionais concluídos e pendentes.")
+    st.subheader("🎓 Painel Gerencial: Status do Curso Obrigatório (Apenas Ativos)")
+    st.caption("Acompanhamento exclusivo dos consultores ativos na rede para cobrança e conclusão do curso obrigatório.")
 
-    # Filtro exclusivo de Unidade para este painel gerencial
+    # Filtra rigorosamente apenas quem está ATIVO para este painel gerencial
+    df_ativos_gerencial = df_raw[df_raw['Status'] == 'Ativo'].copy()
+
     col_mg_unidade, _ = st.columns([2, 2])
-    if 'Unidade' in df_raw.columns:
-        unid_gerencial_list = ["Todas"] + sorted([str(u) for u in df_raw['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE']])
+    if 'Unidade' in df_ativos_gerencial.columns:
+        unid_gerencial_list = ["Todas"] + sorted([str(u) for u in df_ativos_gerencial['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE']])
     else:
         unid_gerencial_list = ["Todas"]
 
     with col_mg_unidade:
         unidade_gerencial_sel = st.selectbox("📍 Filtrar Unidade para Análise de Cursos:", unid_gerencial_list, key="mg_unidade_sel")
 
-    df_mg = df_raw.copy()
+    df_mg = df_ativos_gerencial.copy()
     if unidade_gerencial_sel != "Todas" and 'Unidade' in df_mg.columns:
         df_mg = df_mg[df_mg['Unidade'] == unidade_gerencial_sel]
 
-    # Cálculos dos KPIs de Cursos
+    # Cálculos dos KPIs de Cursos (somente base ativa)
     total_unid_curso = len(df_mg)
     total_concluidos = len(df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'concluído'])
     total_pendentes = len(df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'pendente'])
     taxa_conclusao = (total_concluidos / total_unid_curso * 100) if total_unid_curso > 0 else 0
 
     mg_kpi1, mg_kpi2, mg_kpi3, mg_kpi4 = st.columns(4)
-    mg_kpi1.metric("Colaboradores na Unidade", f"{total_unid_curso}")
+    mg_kpi1.metric("Colaboradores Ativos", f"{total_unid_curso}")
     mg_kpi2.metric("Cursos Concluídos", f"{total_concluidos}")
     mg_kpi3.metric("Cursos Pendentes", f"{total_pendentes}")
     mg_kpi4.metric("Taxa de Conclusão", f"{taxa_conclusao:.1f}%")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Gráfico de Pizza / Rosca e Visão Detalhada
     col_mg_graf, col_mg_detalhe = st.columns(2)
 
     with col_mg_graf:
-        st.subheader("📊 Proporção de Conclusão")
+        st.subheader("📊 Proporção de Conclusão (Ativos)")
         if total_unid_curso > 0 and 'Consultor de Sucesso' in df_mg.columns:
             df_curso_count = df_mg['Consultor de Sucesso'].value_counts().reset_index()
             df_curso_count.columns = ['Status do Curso', 'Quantidade']
@@ -468,11 +469,9 @@ if opcao_menu == "📈 Matrículas Concluídas":
     with col_mg_detalhe:
         st.subheader("👥 Lista Nominal (Pendentes & Concluídos)")
         if not df_mg.empty and 'Consultor de Sucesso' in df_mg.columns:
-            # Exibe tabela compacta para o gestor auditar rapidamente
             cols_mg_tabela = ['Consultor (PF)', 'Razão Social', 'Supervisor / PV', 'Consultor de Sucesso']
             cols_mg_existentes = [c for c in cols_mg_tabela if c in df_mg.columns]
             
-            # Ordena colocando os Pendentes no topo para facilitar a cobrança do gestor
             df_mg_ordenado = df_mg.sort_values(by='Consultor de Sucesso', ascending=False)
             st.dataframe(df_mg_ordenado[cols_mg_existentes], use_container_width=True, hide_index=True, height=300)
 
