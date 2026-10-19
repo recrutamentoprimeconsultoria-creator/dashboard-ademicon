@@ -6,7 +6,7 @@ from google.oauth2.service_account import Credentials
 import os
 
 # ---------------------------------------------------------
-# 1. Configuração da Página e CSS Corporativo Responsivo
+# 1. Configuração da Página e CSS Corporativo Responsivo & Menu
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Dashboard de Credenciamento & Prévias | Ademicon",
@@ -69,11 +69,26 @@ st.markdown("""
         color: #ffffff;
     }
     
+    /* Estilização Avançada da Sidebar para parecer um Menu Executivo */
     [data-testid="stSidebar"] {
         background-color: #002B49;
     }
     [data-testid="stSidebar"] * {
         color: #ffffff !important;
+    }
+    
+    /* Transforma o radio do menu em blocos limpos */
+    [data-testid="stSidebar"] div[role="radiogroup"] label {
+        background-color: rgba(255, 255, 255, 0.07);
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.2s ease;
+    }
+    [data-testid="stSidebar"] div[role="radiogroup"] label:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
     }
 
     @media (max-width: 768px) {
@@ -250,7 +265,6 @@ def load_data_previas():
         ]
         df_previas['Candidato_Match'] = df_previas['Candidato'].astype(str).str.strip().str.lower()
 
-    # Cruzamento com a planilha do Curso Consultor PRO
     try:
         sheet_pro = client.open_by_url(SHEET_URL_CURSO_PRO)
         ws_pro = sheet_pro.get_worksheet(0)
@@ -278,7 +292,6 @@ def load_data_previas():
     except Exception:
         df_previas['Consultor PRO'] = 'Desistência'
 
-    # Aplicação da regra: Status iniciais definem Consultor PRO como "Sem Acesso"
     if 'Status do Processo' in df_previas.columns and 'Consultor PRO' in df_previas.columns:
         status_sem_acesso = ['aguardando docs pf', 'assinar termo', 'em análise']
         mask_sem_acesso = df_previas['Status do Processo'].str.lower().isin(status_sem_acesso)
@@ -290,7 +303,7 @@ def load_data_previas():
     return df_previas
 
 # ---------------------------------------------------------
-# 3. Sidebar (Navegação Principal com Logo Centralizada)
+# 3. Sidebar (Menu Executivo Organizado e Limpo)
 # ---------------------------------------------------------
 with st.sidebar:
     _, col_logo, _ = st.columns([1, 4, 1])
@@ -300,10 +313,12 @@ with st.sidebar:
         
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("### 📌 Gente & Gestão")
+    st.markdown("<span style='font-size:0.85rem; color:#94a3b8;'>SELECIONAR MÓDULO:</span>", unsafe_allow_html=True)
     
     opcao_menu = st.radio(
         "Selecione o Módulo:",
-        ["📈 Matrículas Concluídas", "📋 Prévias (Gestão de Candidatos)"]
+        ["📈 Matrículas Concluídas", "📋 Prévias (Gestão de Candidatos)"],
+        label_visibility="collapsed"
     )
     st.markdown("---")
     st.caption("Fabio Pelegrino - Head de Pessoas")
