@@ -446,7 +446,7 @@ if opcao_menu == "📈 Matrículas Concluídas":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col_mg_graf, col_mg_detalhe = st.columns(2)
+    col_mg_graf, col_mg_ranking = st.columns(2)
 
     with col_mg_graf:
         st.subheader("📊 Proporção de Conclusão (Ativos)")
@@ -466,14 +466,25 @@ if opcao_menu == "📈 Matrículas Concluídas":
         else:
             st.info("Nenhum dado encontrado para os filtros selecionados.")
 
-    with col_mg_detalhe:
-        st.subheader("👥 Lista Nominal (Pendentes & Concluídos)")
-        if not df_mg.empty and 'Consultor de Sucesso' in df_mg.columns:
-            cols_mg_tabela = ['Consultor (PF)', 'Razão Social', 'Supervisor / PV', 'Consultor de Sucesso']
-            cols_mg_existentes = [c for c in cols_mg_tabela if c in df_mg.columns]
-            
-            df_mg_ordenado = df_mg.sort_values(by='Consultor de Sucesso', ascending=False)
-            st.dataframe(df_mg_ordenado[cols_mg_existentes], use_container_width=True, hide_index=True, height=300)
+    with col_mg_ranking:
+        st.subheader("🏆 Top Supervisores com Pendências")
+        if not df_mg.empty and 'Supervisor / PV' in df_mg.columns and 'Consultor de Sucesso' in df_mg.columns:
+            df_pendentes = df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'pendente']
+            if not df_pendentes.empty:
+                df_sup_pend = df_pendentes['Supervisor / PV'].value_counts().head(8).reset_index()
+                df_sup_pend.columns = ['Supervisor / PV', 'Pendências']
+                
+                fig_rank = px.bar(
+                    df_sup_pend, x='Pendências', y='Supervisor / PV', orientation='h',
+                    text='Pendências', color_discrete_sequence=['#002B49']
+                )
+                fig_rank.update_traces(textposition='outside')
+                fig_rank.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Cursos Pendentes", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
+                st.plotly_chart(fig_rank, use_container_width=True)
+            else:
+                st.success("🎉 Parabéns! Não há cursos pendentes para os filtros selecionados.")
+        else:
+            st.info("Dados insuficientes para gerar o ranking.")
 
 
 # ---------------------------------------------------------
