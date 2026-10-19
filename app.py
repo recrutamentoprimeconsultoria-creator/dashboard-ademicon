@@ -17,12 +17,10 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    /* Fundo da aplicação */
     .main {
         background-color: #f4f6f8;
     }
     
-    /* Cartões de KPI Elegantes e Corporativos */
     [data-testid="stMetric"] {
         background-color: #ffffff;
         border-left: 5px solid #002B49;
@@ -71,7 +69,6 @@ st.markdown("""
         color: #ffffff;
     }
     
-    /* Estilização da Sidebar */
     [data-testid="stSidebar"] {
         background-color: #002B49;
     }
@@ -79,27 +76,15 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* 📱 OTIMIZAÇÕES ESPECÍFICAS PARA CELULAR (RESPONSIVIDADE) */
     @media (max-width: 768px) {
-        /* Reduz o tamanho dos títulos principais em telas pequenas para não quebrar o layout */
-        h1 {
-            font-size: 1.5rem !important;
-        }
-        h2 {
-            font-size: 1.3rem !important;
-        }
-        h3 {
-            font-size: 1.1rem !important;
-        }
-        
-        /* Ajusta margens e paddings gerais para aproveitar melhor a tela do celular */
+        h1 { font-size: 1.5rem !important; }
+        h2 { font-size: 1.3rem !important; }
+        h3 { font-size: 1.1rem !important; }
         .block-container {
             padding-left: 1rem !important;
             padding-right: 1rem !important;
             padding-top: 1rem !important;
         }
-        
-        /* Deixa os KPIs mais compactos no mobile */
         [data-testid="stMetric"] {
             padding: 12px;
             margin-bottom: 8px;
@@ -116,6 +101,7 @@ st.markdown("""
 # ---------------------------------------------------------
 SHEET_URL_CRED = "https://docs.google.com/spreadsheets/d/14COiWWgyaBJwJT_otJ01O3DFd1iQCTXP15c0dJXbKg8/edit"
 SHEET_URL_PREVIAS = "https://docs.google.com/spreadsheets/d/1jqq3qqdojoWPBSWn4LninB0XWxxV3l9DJEjP7lMKC7I/edit"
+SHEET_URL_CURSO = "https://docs.google.com/spreadsheets/d/1RVagsSTtPNbAcNERu3ZaRVjVTcqF6CTbzMTpYVU2LzQ/edit"
 
 def get_dataframe_from_worksheet(ws):
     data = ws.get_all_values()
@@ -144,8 +130,9 @@ def load_data_cred():
         credentials = Credentials.from_service_account_file(json_path, scopes=scopes)
         
     client = gspread.authorize(credentials)
-    sheet = client.open_by_url(SHEET_URL_CRED)
     
+    # 1. Carregar Credenciamento
+    sheet = client.open_by_url(SHEET_URL_CRED)
     ws_ativas = sheet.worksheet("Matriculas real")
     df_ativas = get_dataframe_from_worksheet(ws_ativas)
     
@@ -173,6 +160,32 @@ def load_data_cred():
         df_total['Unidade'] = df_total['Unidade'].astype(str).str.strip().str.upper()
     if 'Supervisor / PV' in df_total.columns:
         df_total['Supervisor / PV'] = df_total['Supervisor / PV'].astype(str).str.strip()
+    if 'Matrícula' in df_total.columns:
+        df_total['Matrícula'] = df_total['Matrícula'].astype(str).str.strip()
+
+    # 2. Carregar Planilha de Cursos (Consultor de Sucesso)
+    try:
+        sheet_curso = client.open_by_url(SHEET_URL_CURSO)
+        ws_curso = sheet_curso.get_worksheet(0) # Pega a primeira aba
+        df_curso = get_dataframe_from_worksheet(ws_curso)
+        
+        # Identifica a matrícula e a coluna E (status do curso)
+        if len(df_curso.columns) >= 5:
+            col_mat_curso = df_curso.columns[0] # Geralmente a matrícula está na primeira coluna
+            col_status_curso = df_curso.columns[4] # Coluna E
+            
+            df_curso = df_curso[[col_mat_curso, col_status_curso]].copy()
+            df_curso.columns = ['Matrícula', 'Consultor de Sucesso']
+            df_curso['Matrícula'] = df_curso['Matrícula'].astype(str).str.strip()
+            df_curso['Consultor de Sucesso'] = df_curso['Consultor de Sucesso'].astype(str).str.strip().replace(['', 'None', 'nan'], 'Pendente')
+            
+            # Junta com a tabela principal de matrículas
+            df_total = pd.merge(df_total, df_curso, on='Matrícula', how='left')
+            df_total['Consultor de Sucesso'] = df_total['Consultor de Sucesso'].fillna('Pendente')
+        else:
+            df_total['Consultor de Sucesso'] = 'Pendente'
+    except Exception:
+        df_total['Consultor de Sucesso'] = 'Pendente'
     
     return df_total
 
@@ -266,7 +279,7 @@ if opcao_menu == "📈 Matrículas Concluídas":
     st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("### 🔍 Filtros de Análise")
-    col_f_unidade, col_f_supervisor, col_f_btn = st.columns([2, 2, 1])
+    col_f_unidade, col_f_supervisor, col_f_curso, col_f_btn = st.columns([2, 2, 2, 1])
 
     if 'Unidade' in df_raw.columns:
         unid_uniquas = [str(u) for u in df_raw['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE']]
@@ -292,6 +305,13 @@ if opcao_menu == "📈 Matrículas Concluídas":
 
     if supervisor_sel != "Todos" and 'Supervisor / PV' in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado['Supervisor / PV'] == supervisor_sel]
+
+    # Novo filtro para o Curso Consultor de Sucesso
+    with col_f_curso:
+        curso_sel = st.selectbox("🎓 Consultor de Sucesso:", ["Todos", "Concluído", "Pendente"])
+
+    if curso_sel != "Todos" and 'Consultor de Sucesso' in df_filtrado.columns:
+        df_filtrado = df_filtrado[df_filtrado['Consultor de Sucesso'].str.lower() == curso_sel.lower()]
 
     with col_f_btn:
         st.markdown("<br>", unsafe_allow_html=True)
@@ -369,7 +389,7 @@ if opcao_menu == "📈 Matrículas Concluídas":
             (df_tabela['E-mail'].astype(str).str.contains(termo_busca, case=False, na=False) if 'E-mail' in df_tabela.columns else False)
         ]
 
-    cols_exibicao = ['Matrícula', 'Razão Social', 'Consultor (PF)', 'Unidade', 'Supervisor / PV', 'E-mail', 'Status']
+    cols_exibicao = ['Matrícula', 'Razão Social', 'Consultor (PF)', 'Unidade', 'Supervisor / PV', 'Consultor de Sucesso', 'E-mail', 'Status']
     cols_existentes = [c for c in cols_exibicao if c in df_tabela.columns]
 
     csv_data = df_tabela[cols_existentes].to_csv(index=False).encode('utf-8')
@@ -399,7 +419,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     
     col_p1, col_p2, col_p3, col_p4 = st.columns([2, 2, 2, 1])
 
-    # 1. Filtro Supervisor
     if 'Supervisor / PV' in df_previas_raw.columns:
         sup_unicos_p = [str(s) for s in df_previas_raw['Supervisor / PV'].dropna().unique() if str(s).strip() != '']
         supervisores_previas = ["Todos"] + sorted(list(set(sup_unicos_p)))
@@ -413,7 +432,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     if supervisor_p_sel != "Todos" and 'Supervisor / PV' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Supervisor / PV'] == supervisor_p_sel]
 
-    # 2. Filtro Cidade
     if 'Cidade' in df_previas_filt.columns:
         cid_unicas = [str(c) for c in df_previas_filt['Cidade'].dropna().unique() if str(c).strip() != '']
         cidades_previas = ["Todas"] + sorted(list(set(cid_unicas)))
@@ -426,7 +444,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     if cidade_sel != "Todas" and 'Cidade' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Cidade'] == cidade_sel]
 
-    # 3. Filtro Status do Processo
     if 'Status do Processo' in df_previas_filt.columns:
         status_unicos = [str(st_p) for st_p in df_previas_filt['Status do Processo'].dropna().unique() if str(st_p).strip() != '']
         status_previas = ["Todos"] + sorted(list(set(status_unicos)))
@@ -439,7 +456,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     if status_sel != "Todos" and 'Status do Processo' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Status do Processo'] == status_sel]
 
-    # 4. Botão de Atualizar
     with col_p4:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🔄 Atualizar", key="p_btn_refresh"):
@@ -501,6 +517,6 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 
     with col_p_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar Lista (CSV)", data=csv_p_data, file_name="pipeline_candidatos_previas.csv", mime="text/css")
+        st.download_button("📥 Exportar Lista (CSV)", data=csv_p_data, file_name="pipeline_candidatos_previas.csv", mime="text/csv")
 
     st.dataframe(df_p_tabela[cols_finais], use_container_width=True, hide_index=True)
