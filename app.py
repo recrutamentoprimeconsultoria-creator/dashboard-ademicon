@@ -163,7 +163,7 @@ def load_data_cred():
     if 'Consultor (PF)' in df_total.columns:
         df_total['Consultor_Match'] = df_total['Consultor (PF)'].astype(str).str.strip().str.lower()
 
-    # Curso Consultor de Sucesso
+    # Curso Consultor de Sucesso (Se não encontrar, assume 'Desistência')
     try:
         sheet_curso = client.open_by_url(SHEET_URL_CURSO_CRED)
         ws_curso = sheet_curso.get_worksheet(0)
@@ -183,13 +183,13 @@ def load_data_cred():
             if not df_curso.empty:
                 df_curso = df_curso.drop_duplicates(subset=['Consultor_Match'])
                 df_total = pd.merge(df_total, df_curso, on='Consultor_Match', how='left')
-                df_total['Consultor de Sucesso'] = df_total['Consultor de Sucesso'].fillna('Pendente')
+                df_total['Consultor de Sucesso'] = df_total['Consultor de Sucesso'].fillna('Desistência')
             else:
-                df_total['Consultor de Sucesso'] = 'Pendente'
+                df_total['Consultor de Sucesso'] = 'Desistência'
         else:
-            df_total['Consultor de Sucesso'] = 'Pendente'
+            df_total['Consultor de Sucesso'] = 'Desistência'
     except Exception:
-        df_total['Consultor de Sucesso'] = 'Pendente'
+        df_total['Consultor de Sucesso'] = 'Desistência'
 
     if 'Consultor_Match' in df_total.columns:
         df_total = df_total.drop(columns=['Consultor_Match'])
@@ -251,7 +251,7 @@ def load_data_previas():
         ]
         df_previas['Candidato_Match'] = df_previas['Candidato'].astype(str).str.strip().str.lower()
 
-    # Cruzamento com a planilha do Curso Consultor PRO (Coluna B = Nome, Coluna E = Status)
+    # Cruzamento com a planilha do Curso Consultor PRO (Se não encontrar, assume 'Desistência')
     try:
         sheet_pro = client.open_by_url(SHEET_URL_CURSO_PRO)
         ws_pro = sheet_pro.get_worksheet(0)
@@ -271,13 +271,13 @@ def load_data_previas():
             if not df_pro.empty:
                 df_pro = df_pro.drop_duplicates(subset=['Candidato_Match'])
                 df_previas = pd.merge(df_previas, df_pro, on='Candidato_Match', how='left')
-                df_previas['Consultor PRO'] = df_previas['Consultor PRO'].fillna('Pendente')
+                df_previas['Consultor PRO'] = df_previas['Consultor PRO'].fillna('Desistência')
             else:
-                df_previas['Consultor PRO'] = 'Pendente'
+                df_previas['Consultor PRO'] = 'Desistência'
         else:
-            df_previas['Consultor PRO'] = 'Pendente'
+            df_previas['Consultor PRO'] = 'Desistência'
     except Exception:
-        df_previas['Consultor PRO'] = 'Pendente'
+        df_previas['Consultor PRO'] = 'Desistência'
 
     if 'Candidato_Match' in df_previas.columns:
         df_previas = df_previas.drop(columns=['Candidato_Match'])
@@ -346,7 +346,7 @@ if opcao_menu == "📈 Matrículas Concluídas":
         df_filtrado = df_filtrado[df_filtrado['Supervisor / PV'] == supervisor_sel]
 
     with col_f_curso:
-        curso_sel = st.selectbox("🎓 Consultor de Sucesso:", ["Todos", "Concluído", "Pendente"])
+        curso_sel = st.selectbox("🎓 Consultor de Sucesso:", ["Todos", "Concluído", "Pendente", "Desistência"])
 
     if curso_sel != "Todos" and 'Consultor de Sucesso' in df_filtrado.columns:
         df_filtrado = df_filtrado[df_filtrado['Consultor de Sucesso'].str.lower() == curso_sel.lower()]
@@ -462,13 +462,15 @@ if opcao_menu == "📈 Matrículas Concluídas":
     total_unid_curso = len(df_mg)
     total_concluidos = len(df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'concluído'])
     total_pendentes = len(df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'pendente'])
+    total_desistencias = len(df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'desistência'])
     taxa_conclusao = (total_concluidos / total_unid_curso * 100) if total_unid_curso > 0 else 0
 
-    mg_kpi1, mg_kpi2, mg_kpi3, mg_kpi4 = st.columns(4)
+    mg_kpi1, mg_kpi2, mg_kpi3, mg_kpi4, mg_kpi5 = st.columns(5)
     mg_kpi1.metric("Colaboradores Ativos", f"{total_unid_curso}")
-    mg_kpi2.metric("Cursos Concluídos", f"{total_concluidos}")
-    mg_kpi3.metric("Cursos Pendentes", f"{total_pendentes}")
-    mg_kpi4.metric("Taxa de Conclusão", f"{taxa_conclusao:.1f}%")
+    mg_kpi2.metric("Concluídos", f"{total_concluidos}")
+    mg_kpi3.metric("Pendentes", f"{total_pendentes}")
+    mg_kpi4.metric("Desistências", f"{total_desistencias}")
+    mg_kpi5.metric("Taxa de Conclusão", f"{taxa_conclusao:.1f}%")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -483,7 +485,7 @@ if opcao_menu == "📈 Matrículas Concluídas":
             fig_donut = px.pie(
                 df_curso_count, values='Quantidade', names='Status do Curso',
                 color='Status do Curso',
-                color_discrete_map={'Concluído': '#002B49', 'Pendente': '#e2e8f0'},
+                color_discrete_map={'Concluído': '#002B49', 'Pendente': '#3389C5', 'Desistência': '#e2e8f0'},
                 hole=0.5
             )
             fig_donut.update_traces(textinfo='percent+label', textfont_size=14)
@@ -493,22 +495,22 @@ if opcao_menu == "📈 Matrículas Concluídas":
             st.info("Nenhum dado encontrado para os filtros selecionados.")
 
     with col_mg_ranking:
-        st.subheader("🏆 Top Supervisores com Pendências")
+        st.subheader("🏆 Top Supervisores com Pendências / Desistências")
         if not df_mg.empty and 'Supervisor / PV' in df_mg.columns and 'Consultor de Sucesso' in df_mg.columns:
-            df_pendentes = df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'pendente']
-            if not df_pendentes.empty:
-                df_sup_pend = df_pendentes['Supervisor / PV'].value_counts().head(8).reset_index()
-                df_sup_pend.columns = ['Supervisor / PV', 'Pendências']
+            df_pend_desist = df_mg[df_mg['Consultor de Sucesso'].str.lower().isin(['pendente', 'desistência'])]
+            if not df_pend_desist.empty:
+                df_sup_pend = df_pend_desist['Supervisor / PV'].value_counts().head(8).reset_index()
+                df_sup_pend.columns = ['Supervisor / PV', 'Ocorrências']
                 
                 fig_rank = px.bar(
-                    df_sup_pend, x='Pendências', y='Supervisor / PV', orientation='h',
-                    text='Pendências', color_discrete_sequence=['#002B49']
+                    df_sup_pend, x='Ocorrências', y='Supervisor / PV', orientation='h',
+                    text='Ocorrências', color_discrete_sequence=['#002B49']
                 )
                 fig_rank.update_traces(textposition='outside')
-                fig_rank.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Cursos Pendentes", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
+                fig_rank.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Pendências / Desistências", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
                 st.plotly_chart(fig_rank, use_container_width=True)
             else:
-                st.success("🎉 Parabéns! Não há cursos pendentes para os filtros selecionados.")
+                st.success("🎉 Parabéns! Não há pendências ou desistências para os filtros selecionados.")
         else:
             st.info("Dados insuficientes para gerar o ranking.")
 
@@ -568,9 +570,8 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     if status_sel != "Todos" and 'Status do Processo' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Status do Processo'] == status_sel]
 
-    # Filtro do Curso Consultor PRO nas Prévias
     with col_p4:
-        curso_pro_sel = st.selectbox("🎓 Consultor PRO:", ["Todos", "Concluído", "Pendente"], key="p_curso_pro_sel")
+        curso_pro_sel = st.selectbox("🎓 Consultor PRO:", ["Todos", "Concluído", "Pendente", "Desistência"], key="p_curso_pro_sel")
 
     if curso_pro_sel != "Todos" and 'Consultor PRO' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == curso_pro_sel.lower()]
@@ -609,9 +610,7 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
         fig_st.update_layout(showlegend=False, xaxis_title="", yaxis_title="Candidatos", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_st, use_container_width=True)
 
-    # -------------------------------------------------------------------------
-    # PAINEL GERENCIAL DE PRÉVIAS - CURSO CONSULTOR PRO
-    # -------------------------------------------------------------------------
+    # Painel Gerencial - Prévias (Consultor PRO)
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.divider()
     st.subheader("🎓 Painel Gerencial: Status do Curso Consultor PRO (Prévias)")
@@ -620,13 +619,15 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     total_previas_curso = len(df_previas_filt)
     total_pro_concluidos = len(df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'concluído']) if 'Consultor PRO' in df_previas_filt.columns else 0
     total_pro_pendentes = len(df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'pendente']) if 'Consultor PRO' in df_previas_filt.columns else 0
+    total_pro_desistencias = len(df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'desistência']) if 'Consultor PRO' in df_previas_filt.columns else 0
     taxa_pro_conclusao = (total_pro_concluidos / total_previas_curso * 100) if total_previas_curso > 0 else 0
 
-    mp_kpi1, mp_kpi2, mp_kpi3, mp_kpi4 = st.columns(4)
+    mp_kpi1, mp_kpi2, mp_kpi3, mp_kpi4, mp_kpi5 = st.columns(5)
     mp_kpi1.metric("Total na Seleção", f"{total_previas_curso}")
     mp_kpi2.metric("PRO Concluído", f"{total_pro_concluidos}")
     mp_kpi3.metric("PRO Pendente", f"{total_pro_pendentes}")
-    mp_kpi4.metric("Taxa de Conclusão PRO", f"{taxa_pro_conclusao:.1f}%")
+    mp_kpi4.metric("PRO Desistência", f"{total_pro_desistencias}")
+    mp_kpi5.metric("Taxa Conclusão PRO", f"{taxa_pro_conclusao:.1f}%")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -641,7 +642,7 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
             fig_donut_pro = px.pie(
                 df_pro_count, values='Quantidade', names='Status do Curso',
                 color='Status do Curso',
-                color_discrete_map={'Concluído': '#002B49', 'Pendente': '#e2e8f0'},
+                color_discrete_map={'Concluído': '#002B49', 'Pendente': '#3389C5', 'Desistência': '#e2e8f0'},
                 hole=0.5
             )
             fig_donut_pro.update_traces(textinfo='percent+label', textfont_size=14)
@@ -651,22 +652,22 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
             st.info("Nenhum dado encontrado para os filtros selecionados.")
 
     with col_mp_ranking:
-        st.subheader("🏆 Prévias: Top Supervisores com PRO Pendente")
+        st.subheader("🏆 Prévias: Top Supervisores com Pendência/Desistência PRO")
         if not df_previas_filt.empty and 'Supervisor / PV' in df_previas_filt.columns and 'Consultor PRO' in df_previas_filt.columns:
-            df_pro_pendentes = df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'pendente']
-            if not df_pro_pendentes.empty:
-                df_sup_pro_pend = df_pro_pendentes['Supervisor / PV'].value_counts().head(8).reset_index()
-                df_sup_pro_pend.columns = ['Supervisor / PV', 'Pendências PRO']
+            df_pro_pend_desist = df_previas_filt[df_previas_filt['Consultor PRO'].str.lower().isin(['pendente', 'desistência'])]
+            if not df_pro_pend_desist.empty:
+                df_sup_pro_pend = df_pro_pend_desist['Supervisor / PV'].value_counts().head(8).reset_index()
+                df_sup_pro_pend.columns = ['Supervisor / PV', 'Ocorrências PRO']
                 
                 fig_rank_pro = px.bar(
-                    df_sup_pro_pend, x='Pendências PRO', y='Supervisor / PV', orientation='h',
-                    text='Pendências PRO', color_discrete_sequence=['#002B49']
+                    df_sup_pro_pend, x='Ocorrências PRO', y='Supervisor / PV', orientation='h',
+                    text='Ocorrências PRO', color_discrete_sequence=['#002B49']
                 )
                 fig_rank_pro.update_traces(textposition='outside')
-                fig_rank_pro.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Cursos PRO Pendentes", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
+                fig_rank_pro.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Pendências / Desistências PRO", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
                 st.plotly_chart(fig_rank_pro, use_container_width=True)
             else:
-                st.success("🎉 Parabéns! Não há cursos PRO pendentes nestas prévias.")
+                st.success("🎉 Parabéns! Não há pendências ou desistências PRO nestas prévias.")
         else:
             st.info("Dados insuficientes para gerar o ranking.")
 
