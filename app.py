@@ -303,8 +303,11 @@ def load_data_previas():
     return df_previas
 
 # ---------------------------------------------------------
-# 3. Sidebar (Menu Executivo com Página Inicial)
+# 3. Gerenciamento de Estado da Navegação (Sidebar & Home)
 # ---------------------------------------------------------
+if 'opcao_menu' not in st.session_state:
+    st.session_state.opcao_menu = "🏠 Página Inicial"
+
 with st.sidebar:
     _, col_logo, _ = st.columns([1, 4, 1])
     with col_logo:
@@ -315,18 +318,36 @@ with st.sidebar:
     st.markdown("### 📌 Gente & Gestão")
     st.markdown("<span style='font-size:0.85rem; color:#94a3b8;'>NAVEGAÇÃO:</span>", unsafe_allow_html=True)
     
+    opcoes_disponiveis = ["🏠 Página Inicial", "📋 Prévias (Gestão de Candidatos)", "📈 Matrículas Concluídas"]
+    
+    # Garante que o índice atual seja válido
+    try:
+        currentIndex = opcoes_disponiveis.index(st.session_state.opcao_menu)
+    except ValueError:
+        currentIndex = 0
+
     opcao_menu = st.radio(
         "Selecione o Módulo:",
-        ["🏠 Página Inicial", "📋 Prévias (Gestão de Candidatos)", "📈 Matrículas Concluídas"],
-        label_visibility="collapsed"
+        opcoes_disponiveis,
+        index=currentIndex,
+        label_visibility="collapsed",
+        key="radio_navegacao"
     )
+    
+    if opcao_menu != st.session_state.opcao_menu:
+        st.session_state.opcao_menu = opcao_menu
+        st.rerun()
+
     st.markdown("---")
     st.caption("Fabio Pelegrino - Head de Pessoas")
+
+# Sincroniza a variável local
+opcao_atual = st.session_state.opcao_menu
 
 # ---------------------------------------------------------
 # PÁGINA INICIAL (LANDING PAGE EXECUTIVA)
 # ---------------------------------------------------------
-if opcao_menu == "🏠 Página Inicial":
+if opcao_atual == "🏠 Página Inicial":
     st.markdown("<br>", unsafe_allow_html=True)
     col_t1, col_t2, col_t3 = st.columns([1, 4, 1])
     with col_t2:
@@ -368,7 +389,7 @@ if opcao_menu == "🏠 Página Inicial":
 # ---------------------------------------------------------
 # MÓDULO 1: PRÉVIAS (GESTÃO DE CANDIDATOS + CURSO CONSULTOR PRO)
 # ---------------------------------------------------------
-elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
+elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     try:
         df_previas_raw = load_data_previas()
     except Exception as e:
@@ -557,7 +578,7 @@ elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
 # ---------------------------------------------------------
 # MÓDULO 2: MATRÍCULAS CONCLUÍDAS
 # ---------------------------------------------------------
-elif opcao_menu == "📈 Matrículas Concluídas":
+elif opcao_atual == "📈 Matrículas Concluídas":
     try:
         df_raw = load_data_cred()
     except Exception as e:
