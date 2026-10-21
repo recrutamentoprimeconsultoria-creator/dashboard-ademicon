@@ -9,7 +9,7 @@ import os
 # 1. Configuração da Página e CSS Corporativo Responsivo
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Dashboard Corporativo | Ademicon",
+    page_title="Dashboard Corporativo | Gente & Gestão",
     page_icon="🏢",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -272,12 +272,12 @@ opcao_atual = st.session_state.menu_selecionado
 LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
 
 # ---------------------------------------------------------
-# PÁGINA INICIAL (100% CENTRALIZADA E LOGO NO RODAPÉ)
+# PÁGINA INICIAL (100% CENTRALIZADA E SEM LOGO NO TOPO)
 # ---------------------------------------------------------
 if opcao_atual == "🏠 Página Inicial":
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
     
-    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.9rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 2rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.05rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
     
     st.markdown("<br><br>", unsafe_allow_html=True)
@@ -313,12 +313,11 @@ if opcao_atual == "🏠 Página Inicial":
             st.session_state.menu_selecionado = "📈 Matrículas Concluídas"
             st.rerun()
 
-    # Rodapé elegante com a Logo da Ademicon centralizada acima do seu nome
-    st.markdown("<br><br><br><br>", unsafe_allow_html=True)
-    st.markdown(f"""
+    # Rodapé elegante e centralizado
+    st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
+    st.markdown("""
         <div style="text-align: center;">
-            <img src="{LOGO_ADEMICON}" width="160" style="margin-bottom: 12px;"/><br>
-            <span style="color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Fabio Pelegrino - Head de Pessoas</span>
+            <span style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Fabio Pelegrino - Head de Pessoas</span>
         </div>
     """, unsafe_allow_html=True)
 
@@ -647,7 +646,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     with col_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/css")
+        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/csv")
 
     st.dataframe(df_tabela[cols_existentes], use_container_width=True, hide_index=True)
 
