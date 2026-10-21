@@ -54,6 +54,7 @@ st.markdown("""
         font-weight: 700;
     }
     
+    /* Botões padronizados e elegantes */
     .stButton>button, .stDownloadButton>button {
         width: 100%;
         border-radius: 8px;
@@ -293,67 +294,64 @@ if 'menu_selecionado' not in st.session_state:
 
 opcao_atual = st.session_state.menu_selecionado
 
-# URLs das Logos
 LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
-LOGO_MOOVEST = "https://raw.githubusercontent.com/fabio-pelegrino/dashboard-ademicon/main/Color%20logo%20-%20no%20background.png" # Ou coloque o link direto da logo da Moovest que subiu para o repositório
 
 # ---------------------------------------------------------
-# PÁGINA INICIAL (LANDING PAGE EXECUTIVA - CARDS MODERNOS)
+# PÁGINA INICIAL (LANDING PAGE EXECUTIVA - CARDS COMPACTOS & MODERNOS)
 # ---------------------------------------------------------
 if opcao_atual == "🏠 Página Inicial":
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Cabeçalho com as duas logos centralizadas lado a lado
+    # Cabeçalho unificado com as duas marcas
     col_l1, col_l2, col_l3 = st.columns([1, 4, 1])
     with col_l2:
         lc1, lc2, lc3 = st.columns([3, 1, 3])
         with lc1:
-            st.image(LOGO_ADEMICON, width=150)
+            st.image(LOGO_ADEMICON, width=140)
         with lc2:
-            st.markdown("<div style='text-align: center; color: #cbd5e1; font-size: 1.8rem; font-weight: 300; padding-top: 10px;'>|</div>", unsafe_allow_html=True)
+            st.markdown("<div style='text-align: center; color: #cbd5e1; font-size: 1.5rem; font-weight: 300; padding-top: 8px;'>|</div>", unsafe_allow_html=True)
         with lc3:
-            # Exibe a logo oficial da Moovest Capital com fundo escuro elegante para destacar o texto branco/turquesa
             st.markdown("""
-                <div style="background-color: #002B49; padding: 12px 16px; border-radius: 8px; text-align: center; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <span style="color: #2dd4bf; font-weight: 900; font-size: 1.05rem; letter-spacing: 1px;">MOOVEST</span><br>
-                    <span style="color: #ffffff; font-size: 0.55rem; letter-spacing: 3px; font-weight: 600;">C A P I T A L</span>
+                <div style="background-color: #002B49; padding: 10px 14px; border-radius: 6px; text-align: center; display: inline-block;">
+                    <span style="color: #2dd4bf; font-weight: 900; font-size: 0.95rem; letter-spacing: 1px;">MOOVEST</span><br>
+                    <span style="color: #ffffff; font-size: 0.5rem; letter-spacing: 2.5px; font-weight: 600;">C A P I T A L</span>
                 </div>
             """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.7rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.6rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #64748b; font-size: 0.95rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Cards mais compactos, modernos e centralizados
-    col_esq, card1, card2, col_dir = st.columns([2, 4, 4, 2])
+    # Centralização dos cards compactos e refinados
+    _, card1, card2, _ = st.columns([1.5, 4, 4, 1.5])
     
     with card1:
         st.markdown("""
-            <div style="background-color: #ffffff; padding: 22px; border-radius: 10px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.06); text-align: center; height: 150px;">
-                <h3 style="color: #002B49; margin-bottom: 8px; font-size: 1.2rem;">📋 Prévias</h3>
-                <p style="color: #475569; font-size: 0.82rem; line-height: 1.3; margin-bottom: 0px;">
+            <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; height: 135px;">
+                <h3 style="color: #002B49; margin-bottom: 6px; font-size: 1.1rem;">📋 Prévias</h3>
+                <p style="color: #475569; font-size: 0.78rem; line-height: 1.3; margin-bottom: 0px;">
                     Gestão tática do pipeline de candidatos, status de cadastro e controle do curso <b>Consultor PRO</b>.
                 </p>
             </div>
         """, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Acessar Gestão de Prévias", key="btn_home_previas"):
+        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+        if st.button("Acessar Gestão de Prévias", key="btn_home_previas_v2"):
             st.session_state.menu_selecionado = "📋 Prévias (Gestão de Candidatos)"
             st.rerun()
 
     with card2:
         st.markdown("""
-            <div style="background-color: #ffffff; padding: 22px; border-radius: 10px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.06); text-align: center; height: 150px;">
-                <h3 style="color: #002B49; margin-bottom: 8px; font-size: 1.2rem;">📈 Matrículas Concluídas</h3>
-                <p style="color: #475569; font-size: 0.82rem; line-height: 1.3; margin-bottom: 0px;">
+            <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; height: 135px;">
+                <h3 style="color: #002B49; margin-bottom: 6px; font-size: 1.1rem;">📈 Matrículas Concluídas</h3>
+                <p style="color: #475569; font-size: 0.78rem; line-height: 1.3; margin-bottom: 0px;">
                     Visão consolidada de parceiros ativos e descredenciados e monitoramento do <b>Consultor de Sucesso</b>.
                 </p>
             </div>
         """, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Acessar Matrículas Concluídas", key="btn_home_matriculas"):
+        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+        if st.button("Acessar Matrículas Concluídas", key="btn_home_matriculas_v2"):
             st.session_state.menu_selecionado = "📈 Matrículas Concluídas"
             st.rerun()
 
@@ -714,7 +712,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     with col_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/csv")
+        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/css")
 
     st.dataframe(df_tabela[cols_existentes], use_container_width=True, hide_index=True)
 
