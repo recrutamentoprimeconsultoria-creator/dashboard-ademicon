@@ -272,21 +272,15 @@ opcao_atual = st.session_state.menu_selecionado
 LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
 
 # ---------------------------------------------------------
-# PÁGINA INICIAL (CENTRALIZADA E APENAS COM LOGO ADEMICON)
+# PÁGINA INICIAL (100% CENTRALIZADA E LOGO NO RODAPÉ)
 # ---------------------------------------------------------
 if opcao_atual == "🏠 Página Inicial":
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Logo centralizada perfeitamente
-    col_l1, col_l2, col_l3 = st.columns([3, 2, 3])
-    with col_l2:
-        st.image(LOGO_ADEMICON, width=200)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.8rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #64748b; font-size: 1rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.9rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.05rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
     # Cards centralizados
     _, card1, card2, _ = st.columns([1.5, 4, 4, 1.5])
@@ -319,8 +313,14 @@ if opcao_atual == "🏠 Página Inicial":
             st.session_state.menu_selecionado = "📈 Matrículas Concluídas"
             st.rerun()
 
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Fabio Pelegrino - Head de Pessoas</p>", unsafe_allow_html=True)
+    # Rodapé elegante com a Logo da Ademicon centralizada acima do seu nome
+    st.markdown("<br><br><br><br>", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style="text-align: center;">
+            <img src="{LOGO_ADEMICON}" width="160" style="margin-bottom: 12px;"/><br>
+            <span style="color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Fabio Pelegrino - Head de Pessoas</span>
+        </div>
+    """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # MÓDULO 1: PRÉVIAS
@@ -332,7 +332,7 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
             st.session_state.menu_selecionado = "🏠 Página Inicial"
             st.rerun()
     with top_c3:
-        st.image(LOGO_ADEMICON, width=90)
+        st.markdown(f"<div style='text-align: right;'><img src='{LOGO_ADEMICON}' width='90'/></div>", unsafe_allow_html=True)
 
     try:
         df_previas_raw = load_data_previas()
@@ -520,7 +520,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
             st.session_state.menu_selecionado = "🏠 Página Inicial"
             st.rerun()
     with top_c3:
-        st.image(LOGO_ADEMICON, width=90)
+        st.markdown(f"<div style='text-align: right;'><img src='{LOGO_ADEMICON}' width='90'/></div>", unsafe_allow_html=True)
 
     try:
         df_raw = load_data_cred()
@@ -647,7 +647,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     with col_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/csv")
+        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/css")
 
     st.dataframe(df_tabela[cols_existentes], use_container_width=True, hide_index=True)
 
