@@ -178,7 +178,6 @@ def load_data_cred():
     if 'Consultor (PF)' in df_total.columns:
         df_total['Consultor_Match'] = df_total['Consultor (PF)'].astype(str).str.strip().str.lower()
 
-    # Curso Consultor de Sucesso (Se não encontrar, assume 'Sem Registro')
     try:
         sheet_curso = client.open_by_url(SHEET_URL_CURSO_CRED)
         ws_curso = sheet_curso.get_worksheet(0)
@@ -266,7 +265,6 @@ def load_data_previas():
         ]
         df_previas['Candidato_Match'] = df_previas['Candidato'].astype(str).str.strip().str.lower()
 
-    # Curso Consultor PRO (Se não encontrar, assume 'Sem Registro')
     try:
         sheet_pro = client.open_by_url(SHEET_URL_CURSO_PRO)
         ws_pro = sheet_pro.get_worksheet(0)
@@ -305,7 +303,7 @@ def load_data_previas():
     return df_previas
 
 # ---------------------------------------------------------
-# 3. Sidebar (Menu Executivo com Prévias em Primeiro)
+# 3. Sidebar (Menu Executivo com Página Inicial)
 # ---------------------------------------------------------
 with st.sidebar:
     _, col_logo, _ = st.columns([1, 4, 1])
@@ -315,20 +313,62 @@ with st.sidebar:
         
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("### 📌 Gente & Gestão")
-    st.markdown("<span style='font-size:0.85rem; color:#94a3b8;'>SELECIONAR MÓDULO:</span>", unsafe_allow_html=True)
+    st.markdown("<span style='font-size:0.85rem; color:#94a3b8;'>NAVEGAÇÃO:</span>", unsafe_allow_html=True)
     
     opcao_menu = st.radio(
         "Selecione o Módulo:",
-        ["📋 Prévias (Gestão de Candidatos)", "📈 Matrículas Concluídas"],
+        ["🏠 Página Inicial", "📋 Prévias (Gestão de Candidatos)", "📈 Matrículas Concluídas"],
         label_visibility="collapsed"
     )
     st.markdown("---")
     st.caption("Fabio Pelegrino - Head de Pessoas")
 
 # ---------------------------------------------------------
+# PÁGINA INICIAL (LANDING PAGE EXECUTIVA)
+# ---------------------------------------------------------
+if opcao_menu == "🏠 Página Inicial":
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_t1, col_t2, col_t3 = st.columns([1, 4, 1])
+    with col_t2:
+        st.markdown("<h1 style='text-align: center; color: #002B49;'>Bem-vindo ao Dashboard Corporativo</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.1rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
+    
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    card1, space, card2 = st.columns([5, 1, 5])
+    
+    with card1:
+        st.markdown("""
+            <div style="background-color: #ffffff; padding: 30px; border-radius: 12px; border-top: 6px solid #002B49; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center;">
+                <h2 style="color: #002B49; margin-bottom: 15px;">📋 Prévias</h2>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+                    Gestão tática do pipeline de candidatos, acompanhamento de status de cadastro e controle de conclusão do curso obrigatório <b>Consultor PRO</b>.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Acessar Gestão de Prévias", key="btn_home_previas"):
+            st.session_state.opcao_menu = "📋 Prévias (Gestão de Candidatos)"
+            st.rerun()
+
+    with card2:
+        st.markdown("""
+            <div style="background-color: #ffffff; padding: 30px; border-radius: 12px; border-top: 6px solid #002B49; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center;">
+                <h2 style="color: #002B49; margin-bottom: 15px;">📈 Matrículas Concluídas</h2>
+                <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+                    Visão consolidada de parceiros ativos e descredenciados, análise por unidade e monitoramento do curso obrigatório <b>Consultor de Sucesso</b>.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Acessar Matrículas Concluídas", key="btn_home_matriculas"):
+            st.session_state.opcao_menu = "📈 Matrículas Concluídas"
+            st.rerun()
+
+# ---------------------------------------------------------
 # MÓDULO 1: PRÉVIAS (GESTÃO DE CANDIDATOS + CURSO CONSULTOR PRO)
 # ---------------------------------------------------------
-if opcao_menu == "📋 Prévias (Gestão de Candidatos)":
+elif opcao_menu == "📋 Prévias (Gestão de Candidatos)":
     try:
         df_previas_raw = load_data_previas()
     except Exception as e:
