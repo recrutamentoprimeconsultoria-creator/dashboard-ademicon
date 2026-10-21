@@ -293,43 +293,45 @@ if 'menu_selecionado' not in st.session_state:
 
 opcao_atual = st.session_state.menu_selecionado
 
+# URLs das Logos
+LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
+LOGO_MOOVEST = "https://raw.githubusercontent.com/seu-usuario/seu-repositorio/main/Color%20logo%20-%20no%20background.png" # Substitua pelo link direto da logo da Moovest no seu GitHub se necessário
+
 # ---------------------------------------------------------
-# PÁGINA INICIAL (LANDING PAGE EXECUTIVA COM DUAS LOGOS)
+# PÁGINA INICIAL (LANDING PAGE EXECUTIVA - CARDS MODERNOS)
 # ---------------------------------------------------------
 if opcao_atual == "🏠 Página Inicial":
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Cabeçalho com as duas logos centralizadas
-    col_l1, col_l2, col_l3 = st.columns([2, 2, 2])
-    with col_l1:
-        st.write("") # Espaçador
+    col_l1, col_l2, col_l3 = st.columns([2, 3, 2])
     with col_l2:
         c_logo1, c_logo2 = st.columns(2)
         with c_logo1:
-            LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
-            st.image(LOGO_ADEMICON, width=130)
+            st.image(LOGO_ADEMICON, width=120)
         with c_logo2:
-            # Fundo escuro simulado para destacar a logo branca da Moovest Capital
             st.markdown("""
-                <div style="background-color: #002B49; padding: 10px; border-radius: 8px; text-align: center; display: flex; align-items: center; justify-content: center; height: 50px;">
-                    <span style="color: white; font-weight: 800; font-size: 0.85rem; letter-spacing: 1px;">MOOVEST<br><span style="font-size: 0.55rem; font-weight: 400;">C A P I T A L</span></span>
+                <div style="background-color: #002B49; padding: 8px 12px; border-radius: 6px; text-align: center; display: inline-block;">
+                    <span style="color: white; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.5px;">MOOVEST</span><br>
+                    <span style="color: white; font-size: 0.45rem; letter-spacing: 2px;">C A P I T A L</span>
                 </div>
             """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: #002B49;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.1rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.8rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; font-size: 1rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
     
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    card1, space, card2 = st.columns([5, 1, 5])
+    # Centralização dos cards compactos e modernos
+    col_esq, card1, card2, col_dir = st.columns([1, 4, 4, 1])
     
     with card1:
         st.markdown("""
-            <div style="background-color: #ffffff; padding: 30px; border-radius: 12px; border-top: 6px solid #002B49; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center;">
-                <h2 style="color: #002B49; margin-bottom: 15px;">📋 Prévias</h2>
-                <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
-                    Gestão tática do pipeline de candidatos, acompanhamento de status de cadastro e controle de conclusão do curso obrigatório <b>Consultor PRO</b>.
+            <div style="background-color: #ffffff; padding: 24px; border-radius: 10px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.06); text-align: center; min-height: 180px;">
+                <h3 style="color: #002B49; margin-bottom: 10px; font-size: 1.3rem;">📋 Prévias</h3>
+                <p style="color: #475569; font-size: 0.88rem; line-height: 1.4; margin-bottom: 0px;">
+                    Gestão tática do pipeline de candidatos, status de cadastro e controle do curso <b>Consultor PRO</b>.
                 </p>
             </div>
         """, unsafe_allow_html=True)
@@ -340,10 +342,10 @@ if opcao_atual == "🏠 Página Inicial":
 
     with card2:
         st.markdown("""
-            <div style="background-color: #ffffff; padding: 30px; border-radius: 12px; border-top: 6px solid #002B49; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center;">
-                <h2 style="color: #002B49; margin-bottom: 15px;">📈 Matrículas Concluídas</h2>
-                <p style="color: #475569; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
-                    Visão consolidada de parceiros ativos e descredenciados, análise por unidade e monitoramento do curso obrigatório <b>Consultor de Sucesso</b>.
+            <div style="background-color: #ffffff; padding: 24px; border-radius: 10px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.06); text-align: center; min-height: 180px;">
+                <h3 style="color: #002B49; margin-bottom: 10px; font-size: 1.3rem;">📈 Matrículas Concluídas</h3>
+                <p style="color: #475569; font-size: 0.88rem; line-height: 1.4; margin-bottom: 0px;">
+                    Visão consolidada de parceiros ativos e descredenciados e monitoramento do <b>Consultor de Sucesso</b>.
                 </p>
             </div>
         """, unsafe_allow_html=True)
@@ -353,13 +355,12 @@ if opcao_atual == "🏠 Página Inicial":
             st.rerun()
 
     st.markdown("<br><br><br>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 0.85rem;'>Fabio Pelegrino - Head de Pessoas</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Fabio Pelegrino - Head de Pessoas</p>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # MÓDULO 1: PRÉVIAS (GESTÃO DE CANDIDATOS + CURSO CONSULTOR PRO)
 # ---------------------------------------------------------
 elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
-    # Barra de topo com botão Voltar e Logos
     top_c1, top_c2, top_c3 = st.columns([2, 6, 2])
     with top_c1:
         if st.button("🏠 Voltar ao Menu Inicial", key="voltar_menu_previas"):
@@ -368,11 +369,12 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     with top_c3:
         sub_l1, sub_l2 = st.columns(2)
         with sub_l1:
-            st.image("https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo", width=80)
+            st.image(LOGO_ADEMICON, width=75)
         with sub_l2:
             st.markdown("""
-                <div style="background-color: #002B49; padding: 6px; border-radius: 6px; text-align: center;">
-                    <span style="color: white; font-weight: 800; font-size: 0.55rem; letter-spacing: 0.5px;">MOOVEST<br><span style="font-size: 0.35rem;">CAPITAL</span></span>
+                <div style="background-color: #002B49; padding: 4px 8px; border-radius: 4px; text-align: center;">
+                    <span style="color: white; font-weight: 800; font-size: 0.5rem;">MOOVEST</span><br>
+                    <span style="color: white; font-size: 0.3rem;">CAPITAL</span>
                 </div>
             """, unsafe_allow_html=True)
 
@@ -565,7 +567,6 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
 # MÓDULO 2: MATRÍCULAS CONCLUÍDAS
 # ---------------------------------------------------------
 elif opcao_atual == "📈 Matrículas Concluídas":
-    # Barra de topo com botão Voltar e Logos
     top_c1, top_c2, top_c3 = st.columns([2, 6, 2])
     with top_c1:
         if st.button("🏠 Voltar ao Menu Inicial", key="voltar_menu_matriculas"):
@@ -574,11 +575,12 @@ elif opcao_atual == "📈 Matrículas Concluídas":
     with top_c3:
         sub_l1, sub_l2 = st.columns(2)
         with sub_l1:
-            st.image("https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo", width=80)
+            st.image(LOGO_ADEMICON, width=75)
         with sub_l2:
             st.markdown("""
-                <div style="background-color: #002B49; padding: 6px; border-radius: 6px; text-align: center;">
-                    <span style="color: white; font-weight: 800; font-size: 0.55rem; letter-spacing: 0.5px;">MOOVEST<br><span style="font-size: 0.35rem;">CAPITAL</span></span>
+                <div style="background-color: #002B49; padding: 4px 8px; border-radius: 4px; text-align: center;">
+                    <span style="color: white; font-weight: 800; font-size: 0.5rem;">MOOVEST</span><br>
+                    <span style="color: white; font-size: 0.3rem;">CAPITAL</span>
                 </div>
             """, unsafe_allow_html=True)
 
