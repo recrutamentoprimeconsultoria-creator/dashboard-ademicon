@@ -30,11 +30,6 @@ st.markdown("""
         padding: 18px;
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    [data-testid="stMetric"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0, 43, 73, 0.12);
     }
     [data-testid="stMetricValue"] {
         font-size: 1.8rem !important;
@@ -54,7 +49,6 @@ st.markdown("""
         font-weight: 700;
     }
     
-    /* Botões padronizados, elegantes e centralizados */
     .stButton>button, .stDownloadButton>button {
         width: 100%;
         border-radius: 8px;
@@ -63,34 +57,16 @@ st.markdown("""
         color: #ffffff;
         border: none;
         padding: 10px 16px;
-        transition: background-color 0.2s ease, transform 0.1s ease;
+        transition: background-color 0.2s ease;
     }
     .stButton>button:hover, .stDownloadButton>button:hover {
         background-color: #00406c;
         color: #ffffff;
     }
 
-    /* Esconde completamente a barra lateral padrão */
+    /* Remove barra lateral */
     [data-testid="stSidebar"] {
         display: none;
-    }
-
-    @media (max-width: 768px) {
-        h1 { font-size: 1.5rem !important; }
-        h2 { font-size: 1.3rem !important; }
-        h3 { font-size: 1.1rem !important; }
-        .block-container {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-            padding-top: 1rem !important;
-        }
-        [data-testid="stMetric"] {
-            padding: 12px;
-            margin-bottom: 8px;
-        }
-        [data-testid="stMetricValue"] {
-            font-size: 1.4rem !important;
-        }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -293,19 +269,18 @@ if 'menu_selecionado' not in st.session_state:
     st.session_state.menu_selecionado = "🏠 Página Inicial"
 
 opcao_atual = st.session_state.menu_selecionado
-
 LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
 
 # ---------------------------------------------------------
-# PÁGINA INICIAL (LANDING PAGE EXECUTIVA - 100% CENTRALIZADA)
+# PÁGINA INICIAL (CENTRALIZADA E APENAS COM LOGO ADEMICON)
 # ---------------------------------------------------------
 if opcao_atual == "🏠 Página Inicial":
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Cabeçalho centralizado com a logo da Ademicon
-    col_l1, col_l2, col_l3 = st.columns([2, 2, 2])
+    # Logo centralizada perfeitamente
+    col_l1, col_l2, col_l3 = st.columns([3, 2, 3])
     with col_l2:
-        st.image(LOGO_ADEMICON, width=180)
+        st.image(LOGO_ADEMICON, width=200)
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.8rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
@@ -313,34 +288,34 @@ if opcao_atual == "🏠 Página Inicial":
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Centralização perfeita dos cards compactos e modernos
+    # Cards centralizados
     _, card1, card2, _ = st.columns([1.5, 4, 4, 1.5])
     
     with card1:
         st.markdown("""
-            <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; height: 135px;">
-                <h3 style="color: #002B49; margin-bottom: 6px; font-size: 1.1rem;">📋 Prévias</h3>
-                <p style="color: #475569; font-size: 0.78rem; line-height: 1.3; margin-bottom: 0px;">
+            <div style="background-color: #ffffff; padding: 22px; border-radius: 8px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; height: 140px;">
+                <h3 style="color: #002B49; margin-bottom: 6px; font-size: 1.15rem;">📋 Prévias</h3>
+                <p style="color: #475569; font-size: 0.8rem; line-height: 1.3; margin-bottom: 0px;">
                     Gestão tática do pipeline de candidatos, status de cadastro e controle do curso <b>Consultor PRO</b>.
                 </p>
             </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        if st.button("Acessar Gestão de Prévias", key="btn_home_previas_v3"):
+        if st.button("Acessar Gestão de Prévias", key="btn_p_vFINAL"):
             st.session_state.menu_selecionado = "📋 Prévias (Gestão de Candidatos)"
             st.rerun()
 
     with card2:
         st.markdown("""
-            <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; height: 135px;">
-                <h3 style="color: #002B49; margin-bottom: 6px; font-size: 1.1rem;">📈 Matrículas Concluídas</h3>
-                <p style="color: #475569; font-size: 0.78rem; line-height: 1.3; margin-bottom: 0px;">
+            <div style="background-color: #ffffff; padding: 22px; border-radius: 8px; border-top: 4px solid #002B49; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; height: 140px;">
+                <h3 style="color: #002B49; margin-bottom: 6px; font-size: 1.15rem;">📈 Matrículas Concluídas</h3>
+                <p style="color: #475569; font-size: 0.8rem; line-height: 1.3; margin-bottom: 0px;">
                     Visão consolidada de parceiros ativos e descredenciados e monitoramento do <b>Consultor de Sucesso</b>.
                 </p>
             </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        if st.button("Acessar Matrículas Concluídas", key="btn_home_matriculas_v3"):
+        if st.button("Acessar Matrículas Concluídas", key="btn_m_vFINAL"):
             st.session_state.menu_selecionado = "📈 Matrículas Concluídas"
             st.rerun()
 
@@ -348,7 +323,7 @@ if opcao_atual == "🏠 Página Inicial":
     st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 0.8rem;'>Fabio Pelegrino - Head de Pessoas</p>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# MÓDULO 1: PRÉVIAS (GESTÃO DE CANDIDATOS + CURSO CONSULTOR PRO)
+# MÓDULO 1: PRÉVIAS
 # ---------------------------------------------------------
 elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     top_c1, top_c2, top_c3 = st.columns([2, 6, 2])
@@ -450,7 +425,6 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
         fig_st.update_layout(showlegend=False, xaxis_title="", yaxis_title="Candidatos", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig_st, use_container_width=True)
 
-    # Painel Gerencial - Prévias (Consultor PRO)
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.divider()
     st.subheader("🎓 Painel Gerencial: Status do Curso Consultor PRO (Prévias)")
@@ -471,7 +445,6 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     mp_kpi5.metric("Taxa Conclusão PRO", f"{taxa_pro_conclusao:.1f}%")
 
     st.markdown("<br>", unsafe_allow_html=True)
-
     col_mp_graf, col_mp_ranking = st.columns(2)
 
     with col_mp_graf:
@@ -489,8 +462,6 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
             fig_donut_pro.update_traces(textinfo='percent+label', textfont_size=14)
             fig_donut_pro.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
             st.plotly_chart(fig_donut_pro, use_container_width=True)
-        else:
-            st.info("Nenhum dado encontrado para os filtros selecionados.")
 
     with col_mp_ranking:
         st.subheader("🏆 Prévias: Top Supervisores com Pendência PRO")
@@ -509,15 +480,11 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
                 st.plotly_chart(fig_rank_pro, use_container_width=True)
             else:
                 st.success("🎉 Parabéns! Não há pendências PRO nestas prévias.")
-        else:
-            st.info("Dados insuficientes para gerar o ranking.")
 
     st.divider()
-
     st.subheader("📋 Funil de Candidatos - Acompanhamento do Supervisor")
     
     col_p_busca, col_p_export = st.columns([3, 1])
-
     with col_p_busca:
         termo_p_busca = st.text_input("🔎 Pesquisar Candidato, Status, WhatsApp ou Cidade:")
 
@@ -534,7 +501,6 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
         'Consultor PRO', 'Origem', 'Cidade', 'Data Abertura', 'Última Atualização', 'Matrícula'
     ]
     cols_finais = [c for c in cols_ordem_supervisor if c in df_p_tabela.columns]
-
     csv_p_data = df_p_tabela[cols_finais].to_csv(index=False).encode('utf-8')
 
     with col_p_export:
@@ -652,7 +618,6 @@ elif opcao_atual == "📈 Matrículas Concluídas":
             st.plotly_chart(fig_sup, use_container_width=True)
 
     st.divider()
-
     st.subheader("📋 Detalhamento dos Parceiros e Consultores")
     col_aba, col_pesquisa, col_export = st.columns([1, 2, 1])
 
@@ -678,7 +643,6 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     cols_exibicao = ['Matrícula', 'Razão Social', 'Consultor (PF)', 'Unidade', 'Supervisor / PV', 'Consultor de Sucesso', 'E-mail', 'Status']
     cols_existentes = [c for c in cols_exibicao if c in df_tabela.columns]
-
     csv_data = df_tabela[cols_existentes].to_csv(index=False).encode('utf-8')
 
     with col_export:
@@ -687,14 +651,12 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     st.dataframe(df_tabela[cols_existentes], use_container_width=True, hide_index=True)
 
-    # Painel Gerencial - Consultor de Sucesso
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.divider()
     st.subheader("🎓 Painel Gerencial: Status do Curso Obrigatório (Apenas Ativos)")
     st.caption("Acompanhamento exclusivo dos consultores ativos na rede para cobrança e conclusão do curso obrigatório.")
 
     df_ativos_gerencial = df_raw[df_raw['Status'] == 'Ativo'].copy()
-
     col_mg_unidade, _ = st.columns([2, 2])
     if 'Unidade' in df_ativos_gerencial.columns:
         unid_gerencial_list = ["Todas"] + sorted([str(u) for u in df_ativos_gerencial['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE']])
@@ -722,7 +684,6 @@ elif opcao_atual == "📈 Matrículas Concluídas":
     mg_kpi5.metric("Taxa de Conclusão", f"{taxa_conclusao:.1f}%")
 
     st.markdown("<br>", unsafe_allow_html=True)
-
     col_mg_graf, col_mg_ranking = st.columns(2)
 
     with col_mg_graf:
@@ -740,8 +701,6 @@ elif opcao_atual == "📈 Matrículas Concluídas":
             fig_donut.update_traces(textinfo='percent+label', textfont_size=14)
             fig_donut.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
             st.plotly_chart(fig_donut, use_container_width=True)
-        else:
-            st.info("Nenhum dado encontrado para os filtros selecionados.")
 
     with col_mg_ranking:
         st.subheader("🏆 Top Supervisores com Pendências")
@@ -760,5 +719,3 @@ elif opcao_atual == "📈 Matrículas Concluídas":
                 st.plotly_chart(fig_rank, use_container_width=True)
             else:
                 st.success("🎉 Parabéns! Não há pendências para os filtros selecionados.")
-        else:
-            st.info("Dados insuficientes para gerar o ranking.")
