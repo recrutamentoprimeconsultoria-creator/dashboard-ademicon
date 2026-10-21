@@ -6,13 +6,13 @@ from google.oauth2.service_account import Credentials
 import os
 
 # ---------------------------------------------------------
-# 1. Configuração da Página e CSS Corporativo Responsivo & Menu
+# 1. Configuração da Página e CSS Corporativo Responsivo
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Dashboard de Credenciamento & Prévias | Ademicon",
+    page_title="Dashboard Corporativo | Ademicon & Moovest Capital",
     page_icon="🏢",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown("""
@@ -68,27 +68,10 @@ st.markdown("""
         background-color: #00406c;
         color: #ffffff;
     }
-    
-    /* Estilização Avançada da Sidebar para parecer um Menu Executivo */
+
+    /* Esconde completamente a barra lateral padrão */
     [data-testid="stSidebar"] {
-        background-color: #002B49;
-    }
-    [data-testid="stSidebar"] * {
-        color: #ffffff !important;
-    }
-    
-    /* Transforma o radio do menu em blocos limpos */
-    [data-testid="stSidebar"] div[role="radiogroup"] label {
-        background-color: rgba(255, 255, 255, 0.07);
-        border-radius: 8px;
-        padding: 10px 14px;
-        margin-bottom: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        transition: all 0.2s ease;
-    }
-    [data-testid="stSidebar"] div[role="radiogroup"] label:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.3);
+        display: none;
     }
 
     @media (max-width: 768px) {
@@ -303,50 +286,39 @@ def load_data_previas():
     return df_previas
 
 # ---------------------------------------------------------
-# 3. Gerenciamento de Estado da Navegação (Sidebar & Home)
+# 3. Gerenciamento de Estado da Navegação
 # ---------------------------------------------------------
 if 'menu_selecionado' not in st.session_state:
     st.session_state.menu_selecionado = "🏠 Página Inicial"
 
-with st.sidebar:
-    _, col_logo, _ = st.columns([1, 4, 1])
-    with col_logo:
-        LOGO_URL = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
-        st.image(LOGO_URL, width=170)
-        
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("### 📌 Gente & Gestão")
-    st.markdown("<span style='font-size:0.85rem; color:#94a3b8;'>NAVEGAÇÃO:</span>", unsafe_allow_html=True)
-    
-    opcoes_disponiveis = ["🏠 Página Inicial", "📋 Prévias (Gestão de Candidatos)", "📈 Matrículas Concluídas"]
-    
-    def atualiza_menu():
-        st.session_state.menu_selecionado = st.session_state.radio_navegacao
-
-    st.radio(
-        "Selecione o Módulo:",
-        opcoes_disponiveis,
-        index=opcoes_disponiveis.index(st.session_state.menu_selecionado),
-        label_visibility="collapsed",
-        key="radio_navegacao",
-        on_change=atualiza_menu
-    )
-    
-    st.markdown("---")
-    st.caption("Fabio Pelegrino - Head de Pessoas")
-
-# Sincroniza a variável de exibição
 opcao_atual = st.session_state.menu_selecionado
 
 # ---------------------------------------------------------
-# PÁGINA INICIAL (LANDING PAGE EXECUTIVA)
+# PÁGINA INICIAL (LANDING PAGE EXECUTIVA COM DUAS LOGOS)
 # ---------------------------------------------------------
 if opcao_atual == "🏠 Página Inicial":
     st.markdown("<br>", unsafe_allow_html=True)
-    col_t1, col_t2, col_t3 = st.columns([1, 4, 1])
-    with col_t2:
-        st.markdown("<h1 style='text-align: center; color: #002B49;'>Bem-vindo ao Dashboard Corporativo</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.1rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
+    
+    # Cabeçalho com as duas logos centralizadas
+    col_l1, col_l2, col_l3 = st.columns([2, 2, 2])
+    with col_l1:
+        st.write("") # Espaçador
+    with col_l2:
+        c_logo1, c_logo2 = st.columns(2)
+        with c_logo1:
+            LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
+            st.image(LOGO_ADEMICON, width=130)
+        with c_logo2:
+            # Fundo escuro simulado para destacar a logo branca da Moovest Capital
+            st.markdown("""
+                <div style="background-color: #002B49; padding: 10px; border-radius: 8px; text-align: center; display: flex; align-items: center; justify-content: center; height: 50px;">
+                    <span style="color: white; font-weight: 800; font-size: 0.85rem; letter-spacing: 1px;">MOOVEST<br><span style="font-size: 0.55rem; font-weight: 400;">C A P I T A L</span></span>
+                </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #002B49;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; font-size: 1.1rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
     
     st.markdown("<br><br>", unsafe_allow_html=True)
     
@@ -380,10 +352,30 @@ if opcao_atual == "🏠 Página Inicial":
             st.session_state.menu_selecionado = "📈 Matrículas Concluídas"
             st.rerun()
 
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 0.85rem;'>Fabio Pelegrino - Head de Pessoas</p>", unsafe_allow_html=True)
+
 # ---------------------------------------------------------
 # MÓDULO 1: PRÉVIAS (GESTÃO DE CANDIDATOS + CURSO CONSULTOR PRO)
 # ---------------------------------------------------------
 elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
+    # Barra de topo com botão Voltar e Logos
+    top_c1, top_c2, top_c3 = st.columns([2, 6, 2])
+    with top_c1:
+        if st.button("🏠 Voltar ao Menu Inicial", key="voltar_menu_previas"):
+            st.session_state.menu_selecionado = "🏠 Página Inicial"
+            st.rerun()
+    with top_c3:
+        sub_l1, sub_l2 = st.columns(2)
+        with sub_l1:
+            st.image("https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo", width=80)
+        with sub_l2:
+            st.markdown("""
+                <div style="background-color: #002B49; padding: 6px; border-radius: 6px; text-align: center;">
+                    <span style="color: white; font-weight: 800; font-size: 0.55rem; letter-spacing: 0.5px;">MOOVEST<br><span style="font-size: 0.35rem;">CAPITAL</span></span>
+                </div>
+            """, unsafe_allow_html=True)
+
     try:
         df_previas_raw = load_data_previas()
     except Exception as e:
@@ -573,6 +565,23 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
 # MÓDULO 2: MATRÍCULAS CONCLUÍDAS
 # ---------------------------------------------------------
 elif opcao_atual == "📈 Matrículas Concluídas":
+    # Barra de topo com botão Voltar e Logos
+    top_c1, top_c2, top_c3 = st.columns([2, 6, 2])
+    with top_c1:
+        if st.button("🏠 Voltar ao Menu Inicial", key="voltar_menu_matriculas"):
+            st.session_state.menu_selecionado = "🏠 Página Inicial"
+            st.rerun()
+    with top_c3:
+        sub_l1, sub_l2 = st.columns(2)
+        with sub_l1:
+            st.image("https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo", width=80)
+        with sub_l2:
+            st.markdown("""
+                <div style="background-color: #002B49; padding: 6px; border-radius: 6px; text-align: center;">
+                    <span style="color: white; font-weight: 800; font-size: 0.55rem; letter-spacing: 0.5px;">MOOVEST<br><span style="font-size: 0.35rem;">CAPITAL</span></span>
+                </div>
+            """, unsafe_allow_html=True)
+
     try:
         df_raw = load_data_cred()
     except Exception as e:
