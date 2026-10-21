@@ -305,8 +305,8 @@ def load_data_previas():
 # ---------------------------------------------------------
 # 3. Gerenciamento de Estado da Navegação (Sidebar & Home)
 # ---------------------------------------------------------
-if 'opcao_menu' not in st.session_state:
-    st.session_state.opcao_menu = "🏠 Página Inicial"
+if 'menu_selecionado' not in st.session_state:
+    st.session_state.menu_selecionado = "🏠 Página Inicial"
 
 with st.sidebar:
     _, col_logo, _ = st.columns([1, 4, 1])
@@ -320,29 +320,23 @@ with st.sidebar:
     
     opcoes_disponiveis = ["🏠 Página Inicial", "📋 Prévias (Gestão de Candidatos)", "📈 Matrículas Concluídas"]
     
-    # Garante que o índice atual seja válido
-    try:
-        currentIndex = opcoes_disponiveis.index(st.session_state.opcao_menu)
-    except ValueError:
-        currentIndex = 0
+    def atualiza_menu():
+        st.session_state.menu_selecionado = st.session_state.radio_navegacao
 
-    opcao_menu = st.radio(
+    st.radio(
         "Selecione o Módulo:",
         opcoes_disponiveis,
-        index=currentIndex,
+        index=opcoes_disponiveis.index(st.session_state.menu_selecionado),
         label_visibility="collapsed",
-        key="radio_navegacao"
+        key="radio_navegacao",
+        on_change=atualiza_menu
     )
     
-    if opcao_menu != st.session_state.opcao_menu:
-        st.session_state.opcao_menu = opcao_menu
-        st.rerun()
-
     st.markdown("---")
     st.caption("Fabio Pelegrino - Head de Pessoas")
 
-# Sincroniza a variável local
-opcao_atual = st.session_state.opcao_menu
+# Sincroniza a variável de exibição
+opcao_atual = st.session_state.menu_selecionado
 
 # ---------------------------------------------------------
 # PÁGINA INICIAL (LANDING PAGE EXECUTIVA)
@@ -369,7 +363,7 @@ if opcao_atual == "🏠 Página Inicial":
         """, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Acessar Gestão de Prévias", key="btn_home_previas"):
-            st.session_state.opcao_menu = "📋 Prévias (Gestão de Candidatos)"
+            st.session_state.menu_selecionado = "📋 Prévias (Gestão de Candidatos)"
             st.rerun()
 
     with card2:
@@ -383,7 +377,7 @@ if opcao_atual == "🏠 Página Inicial":
         """, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Acessar Matrículas Concluídas", key="btn_home_matriculas"):
-            st.session_state.opcao_menu = "📈 Matrículas Concluídas"
+            st.session_state.menu_selecionado = "📈 Matrículas Concluídas"
             st.rerun()
 
 # ---------------------------------------------------------
