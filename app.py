@@ -9,7 +9,7 @@ import os
 # 1. Configuração da Página e CSS Corporativo Responsivo
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Dashboard Corporativo | Ademicon & Moovest Capital",
+    page_title="Dashboard Corporativo | Ademicon",
     page_icon="🏢",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -54,7 +54,7 @@ st.markdown("""
         font-weight: 700;
     }
     
-    /* Botões padronizados e elegantes */
+    /* Botões padronizados, elegantes e centralizados */
     .stButton>button, .stDownloadButton>button {
         width: 100%;
         border-radius: 8px;
@@ -297,34 +297,23 @@ opcao_atual = st.session_state.menu_selecionado
 LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
 
 # ---------------------------------------------------------
-# PÁGINA INICIAL (LANDING PAGE EXECUTIVA - CARDS COMPACTOS & MODERNOS)
+# PÁGINA INICIAL (LANDING PAGE EXECUTIVA - 100% CENTRALIZADA)
 # ---------------------------------------------------------
 if opcao_atual == "🏠 Página Inicial":
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Cabeçalho unificado com as duas marcas
-    col_l1, col_l2, col_l3 = st.columns([1, 4, 1])
+    # Cabeçalho centralizado com a logo da Ademicon
+    col_l1, col_l2, col_l3 = st.columns([2, 2, 2])
     with col_l2:
-        lc1, lc2, lc3 = st.columns([3, 1, 3])
-        with lc1:
-            st.image(LOGO_ADEMICON, width=140)
-        with lc2:
-            st.markdown("<div style='text-align: center; color: #cbd5e1; font-size: 1.5rem; font-weight: 300; padding-top: 8px;'>|</div>", unsafe_allow_html=True)
-        with lc3:
-            st.markdown("""
-                <div style="background-color: #002B49; padding: 10px 14px; border-radius: 6px; text-align: center; display: inline-block;">
-                    <span style="color: #2dd4bf; font-weight: 900; font-size: 0.95rem; letter-spacing: 1px;">MOOVEST</span><br>
-                    <span style="color: #ffffff; font-size: 0.5rem; letter-spacing: 2.5px; font-weight: 600;">C A P I T A L</span>
-                </div>
-            """, unsafe_allow_html=True)
+        st.image(LOGO_ADEMICON, width=180)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.6rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #64748b; font-size: 0.95rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #002B49; font-size: 1.8rem;'>Dashboard Corporativo | Gente & Gestão</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #64748b; font-size: 1rem;'>Selecione abaixo o módulo gerencial que deseja acompanhar:</p>", unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Centralização dos cards compactos e refinados
+    # Centralização perfeita dos cards compactos e modernos
     _, card1, card2, _ = st.columns([1.5, 4, 4, 1.5])
     
     with card1:
@@ -337,7 +326,7 @@ if opcao_atual == "🏠 Página Inicial":
             </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        if st.button("Acessar Gestão de Prévias", key="btn_home_previas_v2"):
+        if st.button("Acessar Gestão de Prévias", key="btn_home_previas_v3"):
             st.session_state.menu_selecionado = "📋 Prévias (Gestão de Candidatos)"
             st.rerun()
 
@@ -351,7 +340,7 @@ if opcao_atual == "🏠 Página Inicial":
             </div>
         """, unsafe_allow_html=True)
         st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
-        if st.button("Acessar Matrículas Concluídas", key="btn_home_matriculas_v2"):
+        if st.button("Acessar Matrículas Concluídas", key="btn_home_matriculas_v3"):
             st.session_state.menu_selecionado = "📈 Matrículas Concluídas"
             st.rerun()
 
@@ -368,16 +357,7 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
             st.session_state.menu_selecionado = "🏠 Página Inicial"
             st.rerun()
     with top_c3:
-        sub_l1, sub_l2 = st.columns(2)
-        with sub_l1:
-            st.image(LOGO_ADEMICON, width=70)
-        with sub_l2:
-            st.markdown("""
-                <div style="background-color: #002B49; padding: 4px 6px; border-radius: 4px; text-align: center;">
-                    <span style="color: #2dd4bf; font-weight: 800; font-size: 0.45rem;">MOOVEST</span><br>
-                    <span style="color: white; font-size: 0.28rem;">CAPITAL</span>
-                </div>
-            """, unsafe_allow_html=True)
+        st.image(LOGO_ADEMICON, width=90)
 
     try:
         df_previas_raw = load_data_previas()
@@ -574,16 +554,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
             st.session_state.menu_selecionado = "🏠 Página Inicial"
             st.rerun()
     with top_c3:
-        sub_l1, sub_l2 = st.columns(2)
-        with sub_l1:
-            st.image(LOGO_ADEMICON, width=70)
-        with sub_l2:
-            st.markdown("""
-                <div style="background-color: #002B49; padding: 4px 6px; border-radius: 4px; text-align: center;">
-                    <span style="color: #2dd4bf; font-weight: 800; font-size: 0.45rem;">MOOVEST</span><br>
-                    <span style="color: white; font-size: 0.28rem;">CAPITAL</span>
-                </div>
-            """, unsafe_allow_html=True)
+        st.image(LOGO_ADEMICON, width=90)
 
     try:
         df_raw = load_data_cred()
@@ -712,7 +683,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     with col_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/css")
+        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/csv")
 
     st.dataframe(df_tabela[cols_existentes], use_container_width=True, hide_index=True)
 
