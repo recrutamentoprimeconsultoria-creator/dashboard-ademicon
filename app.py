@@ -269,10 +269,9 @@ if 'menu_selecionado' not in st.session_state:
     st.session_state.menu_selecionado = "🏠 Página Inicial"
 
 opcao_atual = st.session_state.menu_selecionado
-LOGO_ADEMICON = "https://www.ademicon.com.br/api/media/file/ademicon.svg?2026-01-08T16%3A57%3A33.024Z&dpl=dpl_9yCuySMtpVZ3Y8v8qWfgCTVqNMUo"
 
 # ---------------------------------------------------------
-# PÁGINA INICIAL (100% CENTRALIZADA E SEM LOGO NO TOPO)
+# PÁGINA INICIAL
 # ---------------------------------------------------------
 if opcao_atual == "🏠 Página Inicial":
     st.markdown("<br><br><br>", unsafe_allow_html=True)
@@ -282,7 +281,6 @@ if opcao_atual == "🏠 Página Inicial":
     
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Cards centralizados
     _, card1, card2, _ = st.columns([1.5, 4, 4, 1.5])
     
     with card1:
@@ -313,7 +311,6 @@ if opcao_atual == "🏠 Página Inicial":
             st.session_state.menu_selecionado = "📈 Matrículas Concluídas"
             st.rerun()
 
-    # Rodapé elegante e centralizado
     st.markdown("<br><br><br><br><br>", unsafe_allow_html=True)
     st.markdown("""
         <div style="text-align: center;">
@@ -325,13 +322,9 @@ if opcao_atual == "🏠 Página Inicial":
 # MÓDULO 1: PRÉVIAS
 # ---------------------------------------------------------
 elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
-    top_c1, top_c2, top_c3 = st.columns([2, 6, 2])
-    with top_c1:
-        if st.button("🏠 Voltar ao Menu Inicial", key="voltar_menu_previas"):
-            st.session_state.menu_selecionado = "🏠 Página Inicial"
-            st.rerun()
-    with top_c3:
-        st.markdown(f"<div style='text-align: right;'><img src='{LOGO_ADEMICON}' width='90'/></div>", unsafe_allow_html=True)
+    if st.button("🏠 Voltar ao Menu Inicial", key="voltar_menu_previas"):
+        st.session_state.menu_selecionado = "🏠 Página Inicial"
+        st.rerun()
 
     try:
         df_previas_raw = load_data_previas()
@@ -513,13 +506,9 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
 # MÓDULO 2: MATRÍCULAS CONCLUÍDAS
 # ---------------------------------------------------------
 elif opcao_atual == "📈 Matrículas Concluídas":
-    top_c1, top_c2, top_c3 = st.columns([2, 6, 2])
-    with top_c1:
-        if st.button("🏠 Voltar ao Menu Inicial", key="voltar_menu_matriculas"):
-            st.session_state.menu_selecionado = "🏠 Página Inicial"
-            st.rerun()
-    with top_c3:
-        st.markdown(f"<div style='text-align: right;'><img src='{LOGO_ADEMICON}' width='90'/></div>", unsafe_allow_html=True)
+    if st.button("🏠 Voltar ao Menu Inicial", key="voltar_menu_matriculas"):
+        st.session_state.menu_selecionado = "🏠 Página Inicial"
+        st.rerun()
 
     try:
         df_raw = load_data_cred()
@@ -618,7 +607,9 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     st.divider()
     st.subheader("📋 Detalhamento dos Parceiros e Consultores")
-    col_aba, col_pesquisa, col_export = st.columns([1, 2, 1])
+    
+    # Organização das colunas para inserir o botão Atualizar ao lado do Exportar CSV
+    col_aba, col_pesquisa, col_export, col_refresh_tabela = st.columns([1.2, 2.3, 1, 1])
 
     with col_aba:
         status_filtro = st.radio("Filtrar Tabela:", ["Ativos", "Descredenciados", "Todos"], horizontal=True)
@@ -646,7 +637,13 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     with col_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/csv")
+        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/csv", key="btn_export_tabela")
+
+    with col_refresh_tabela:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("🔄 Atualizar", key="btn_refresh_tabela"):
+            st.cache_data.clear()
+            st.rerun()
 
     st.dataframe(df_tabela[cols_existentes], use_container_width=True, hide_index=True)
 
