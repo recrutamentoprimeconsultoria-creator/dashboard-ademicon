@@ -524,17 +524,17 @@ elif opcao_atual == "📈 Matrículas Concluídas":
     col_f_unidade, col_f_supervisor, col_f_curso, col_f_btn = st.columns([2, 2, 2, 1])
 
     if 'Unidade' in df_raw.columns:
-        unid_uniquas = [str(u) for u in df_raw['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE']]
-        unidades_disponiveis = ["Todas"] + sorted(list(set(unid_uniquas)))
+        unidades_disponiveis = sorted([str(u) for u in df_raw['Unidade'].dropna().unique() if str(u).strip() not in ['', 'NAN', 'NONE']])
     else:
-        unidades_disponiveis = ["Todas"]
+        unidades_disponiveis = []
 
     with col_f_unidade:
-        unidade_sel = st.selectbox("📍 Praça / Unidade:", unidades_disponiveis)
+        # Alterado de selectbox para multiselect e alterado o rótulo para "Unidades"
+        unidades_sel = st.multiselect("📍 Unidades:", unidades_disponiveis, default=[])
 
     df_filtrado = df_raw.copy()
-    if unidade_sel != "Todas" and 'Unidade' in df_filtrado.columns:
-        df_filtrado = df_filtrado[df_filtrado['Unidade'] == unidade_sel]
+    if unidades_sel and 'Unidade' in df_filtrado.columns:
+        df_filtrado = df_filtrado[df_filtrado['Unidade'].isin(unidades_sel)]
 
     if 'Supervisor / PV' in df_filtrado.columns:
         sup_unicos = [str(s) for s in df_filtrado['Supervisor / PV'].dropna().unique() if str(s).strip() not in ['', 'NAN', 'NONE']]
@@ -608,7 +608,6 @@ elif opcao_atual == "📈 Matrículas Concluídas":
     st.divider()
     st.subheader("📋 Detalhamento dos Parceiros e Consultores")
     
-    # Organização das colunas para inserir o botão Atualizar ao lado do Exportar CSV
     col_aba, col_pesquisa, col_export, col_refresh_tabela = st.columns([1.2, 2.3, 1, 1])
 
     with col_aba:
@@ -637,7 +636,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
 
     with col_export:
         st.markdown("<br>", unsafe_allow_html=True)
-        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/csv", key="btn_export_tabela")
+        st.download_button("📥 Exportar CSV", data=csv_data, file_name="detalhamento_credenciamento_ademicon.csv", mime="text/css", key="btn_export_tabela")
 
     with col_refresh_tabela:
         st.markdown("<br>", unsafe_allow_html=True)
