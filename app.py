@@ -342,16 +342,16 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
 
     if 'Supervisor / PV' in df_previas_raw.columns:
         sup_unicos_p = [str(s) for s in df_previas_raw['Supervisor / PV'].dropna().unique() if str(s).strip() != '']
-        supervisores_previas = ["Todos"] + sorted(list(set(sup_unicos_p)))
+        supervisores_previas = sorted(list(set(sup_unicos_p)))
     else:
-        supervisores_previas = ["Todos"]
+        supervisores_previas = []
 
     with col_p1:
-        supervisor_p_sel = st.selectbox("👔 Supervisor:", supervisores_previas, key="p_sup_sel")
+        supervisor_p_sel = st.multiselect("👔 Supervisor:", supervisores_previas, default=[], key="p_sup_sel")
 
     df_previas_filt = df_previas_raw.copy()
-    if supervisor_p_sel != "Todos" and 'Supervisor / PV' in df_previas_filt.columns:
-        df_previas_filt = df_previas_filt[df_previas_filt['Supervisor / PV'] == supervisor_p_sel]
+    if supervisor_p_sel and 'Supervisor / PV' in df_previas_filt.columns:
+        df_previas_filt = df_previas_filt[df_previas_filt['Supervisor / PV'].isin(supervisor_p_sel)]
 
     if 'Cidade' in df_previas_filt.columns:
         cid_unicas = [str(c) for c in df_previas_filt['Cidade'].dropna().unique() if str(c).strip() != '']
@@ -529,7 +529,6 @@ elif opcao_atual == "📈 Matrículas Concluídas":
         unidades_disponiveis = []
 
     with col_f_unidade:
-        # Alterado de selectbox para multiselect e alterado o rótulo para "Unidades"
         unidades_sel = st.multiselect("📍 Unidades:", unidades_disponiveis, default=[])
 
     df_filtrado = df_raw.copy()
@@ -537,22 +536,28 @@ elif opcao_atual == "📈 Matrículas Concluídas":
         df_filtrado = df_filtrado[df_filtrado['Unidade'].isin(unidades_sel)]
 
     if 'Supervisor / PV' in df_filtrado.columns:
-        sup_unicos = [str(s) for s in df_filtrado['Supervisor / PV'].dropna().unique() if str(s).strip() not in ['', 'NAN', 'NONE']]
-        supervisores_disponiveis = ["Todos"] + sorted(list(set(sup_unicos)))
+        sup_unicos = sorted([str(s) for s in df_filtrado['Supervisor / PV'].dropna().unique() if str(s).strip() not in ['', 'NAN', 'NONE']])
     else:
-        supervisores_disponiveis = ["Todos"]
+        sup_unicos = []
 
     with col_f_supervisor:
-        supervisor_sel = st.selectbox("👔 Supervisor / Ponto de Venda:", supervisores_disponiveis)
+        # Alterado de selectbox para multiselect
+        supervisores_sel = st.multiselect("👔 Supervisor / Ponto de Venda:", sup_unicos, default=[])
 
-    if supervisor_sel != "Todos" and 'Supervisor / PV' in df_filtrado.columns:
-        df_filtrado = df_filtrado[df_filtrado['Supervisor / PV'] == supervisor_sel]
+    if supervisores_sel and 'Supervisor / PV' in df_filtrado.columns:
+        df_filtrado = df_filtrado[df_filtrado['Supervisor / PV'].isin(supervisores_sel)]
+
+    if 'Consultor de Sucesso' in df_filtrado.columns:
+        curso_unicos = sorted([str(c) for c in df_filtrado['Consultor de Sucesso'].dropna().unique() if str(c).strip() not in ['', 'NAN', 'NONE']])
+    else:
+        curso_unicos = []
 
     with col_f_curso:
-        curso_sel = st.selectbox("🎓 Consultor de Sucesso:", ["Todos", "Concluído", "Pendente", "Sem Registro"])
+        # Alterado de selectbox para multiselect
+        curso_sel = st.multiselect("🎓 Consultor de Sucesso:", curso_unicos, default=[])
 
-    if curso_sel != "Todos" and 'Consultor de Sucesso' in df_filtrado.columns:
-        df_filtrado = df_filtrado[df_filtrado['Consultor de Sucesso'].str.lower() == curso_sel.lower()]
+    if curso_sel and 'Consultor de Sucesso' in df_filtrado.columns:
+        df_filtrado = df_filtrado[df_filtrado['Consultor de Sucesso'].isin(curso_sel)]
 
     with col_f_btn:
         st.markdown("<br>", unsafe_allow_html=True)
