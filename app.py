@@ -225,7 +225,6 @@ def load_data_previas():
         ]
         df_previas['Candidato_Match'] = df_previas['Candidato'].astype(str).str.strip().str.lower()
 
-    # Leitura refinada da planilha UCA / Curso PRO (Colunas D e E)
     try:
         sheet_pro = client.open_by_url(SHEET_URL_CURSO_PRO)
         ws_pro = sheet_pro.get_worksheet(0)
@@ -234,29 +233,12 @@ def load_data_previas():
             lista_pro = []
             for linha in dados_pro[1:]:
                 if len(linha) >= 5:
-                    nome_cand = str(linha[1]).strip() # Coluna B
-                    status_inicio = str(linha[3]).strip() if len(linha) > 3 else 'Pendente' # Coluna D (Início)
-                    status_fim = str(linha[4]).strip() if len(linha) > 4 else 'Pendente' # Coluna E (Finalização)
-                    
+                    nome_cand = str(linha[1]).strip()
+                    status_pro = str(linha[4]).strip()
                     if nome_cand and nome_cand.lower() not in ['', 'none', 'nan']:
-                        # Lógica refinada solicitada pelo usuário
-                        inicio_txt = status_inicio if status_inicio else 'Pendente'
-                        fim_txt = status_fim if status_fim else 'Pendente'
-                        
-                        if inicio_txt.lower() == 'pendente':
-                            status_geral_pro = 'Não Iniciado'
-                        elif inicio_txt.lower() == 'concluído' and fim_txt.lower() == 'pendente':
-                            status_geral_pro = 'Cursando (Em Andamento)'
-                        elif inicio_txt.lower() == 'concluído' and fim_txt.lower() == 'concluído':
-                            status_geral_pro = 'Concluído 100%'
-                        else:
-                            status_geral_pro = fim_txt
-
                         lista_pro.append({
                             'Candidato_Match': nome_cand.lower(),
-                            'Consultor PRO': status_geral_pro,
-                            'Início PRO': inicio_txt,
-                            'Finalização PRO': fim_txt
+                            'Consultor PRO': status_pro if status_pro else 'Pendente'
                         })
             df_pro = pd.DataFrame(lista_pro)
             if not df_pro.empty:
@@ -359,49 +341,47 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     col_p1, col_p2, col_p3, col_p4, col_p5 = st.columns([2, 2, 2, 2, 1])
 
     if 'Supervisor / PV' in df_previas_raw.columns:
-        sup_unicos_p = sorted(list(set([str(s) for s in df_previas_raw['Supervisor / PV'].dropna().unique() if str(s).strip() != ''])))
+        sup_unicos_p = [str(s) for s in df_previas_raw['Supervisor / PV'].dropna().unique() if str(s).strip() != '']
+        supervisores_previas = sorted(list(set(sup_unicos_p)))
     else:
-        sup_unicos_p = []
+        supervisores_previas = []
 
     with col_p1:
-        supervisor_p_sel = st.multiselect("👔 Supervisor:", sup_unicos_p, default=[], key="p_sup_sel")
+        supervisor_p_sel = st.multiselect("👔 Supervisor:", supervisores_previas, default=[], key="p_sup_sel")
 
     df_previas_filt = df_previas_raw.copy()
     if supervisor_p_sel and 'Supervisor / PV' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Supervisor / PV'].isin(supervisor_p_sel)]
 
     if 'Cidade' in df_previas_filt.columns:
-        cid_unicas = ["Todas"] + sorted(list(set([str(c) for c in df_previas_filt['Cidade'].dropna().unique() if str(c).strip() != ''])))
+        cid_unicas = [str(c) for c in df_previas_filt['Cidade'].dropna().unique() if str(c).strip() != '']
+        cidades_previas = ["Todas"] + sorted(list(set(cid_unicas)))
     else:
-        cid_unicas = ["Todas"]
+        cidades_previas = ["Todas"]
 
     with col_p2:
-        cidade_sel = st.selectbox("📍 Cidade:", cid_unicas, key="p_cid_sel")
+        cidade_sel = st.selectbox("📍 Cidade:", cidades_previas, key="p_cid_sel")
 
     if cidade_sel != "Todas" and 'Cidade' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Cidade'] == cidade_sel]
 
     if 'Status do Processo' in df_previas_filt.columns:
-        status_unicos = ["Todos"] + sorted(list(set([str(st_p) for st_p in df_previas_filt['Status do Processo'].dropna().unique() if str(st_p).strip() != ''])))
+        status_unicos = [str(st_p) for st_p in df_previas_filt['Status do Processo'].dropna().unique() if str(st_p).strip() != '']
+        status_previas = ["Todos"] + sorted(list(set(status_unicos)))
     else:
-        status_unicos = ["Todos"]
+        status_previas = ["Todos"]
 
     with col_p3:
-        status_sel = st.selectbox("📌 Status do Processo:", status_unicos, key="p_status_sel")
+        status_sel = st.selectbox("📌 Status do Processo:", status_previas, key="p_status_sel")
 
     if status_sel != "Todos" and 'Status do Processo' in df_previas_filt.columns:
         df_previas_filt = df_previas_filt[df_previas_filt['Status do Processo'] == status_sel]
 
-    if 'Consultor PRO' in df_previas_filt.columns:
-        pro_unicos = sorted(list(set([str(p) for p in df_previas_filt['Consultor PRO'].dropna().unique() if str(p).strip() != ''])))
-    else:
-        pro_unicos = []
-
     with col_p4:
-        curso_pro_sel = st.multiselect("🎓 Consultor PRO:", pro_unicos, default=[], key="p_curso_pro_sel")
+        curso_pro_sel = st.selectbox("🎓 Consultor PRO:", ["Todos", "Concluído", "Pendente", "Sem Registro", "Sem Acesso"], key="p_curso_pro_sel")
 
-    if curso_pro_sel and 'Consultor PRO' in df_previas_filt.columns:
-        df_previas_filt = df_previas_filt[df_previas_filt['Consultor PRO'].isin(curso_pro_sel)]
+    if curso_pro_sel != "Todos" and 'Consultor PRO' in df_previas_filt.columns:
+        df_previas_filt = df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == curso_pro_sel.lower()]
 
     with col_p5:
         st.markdown("<br>", unsafe_allow_html=True)
@@ -440,26 +420,27 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.divider()
     st.subheader("🎓 Painel Gerencial: Status do Curso Consultor PRO (Prévias)")
-    st.caption("Acompanhamento refinado do andamento (Início e Finalização) do curso obrigatório para os candidatos.")
+    st.caption("Acompanhamento do andamento do curso obrigatório para os candidatos em pipeline.")
 
     total_previas_curso = len(df_previas_filt)
-    tot_nao_iniciado = len(df_previas_filt[df_previas_filt['Consultor PRO'] == 'Não Iniciado']) if 'Consultor PRO' in df_previas_filt.columns else 0
-    tot_cursando = len(df_previas_filt[df_previas_filt['Consultor PRO'] == 'Cursando (Em Andamento)']) if 'Consultor PRO' in df_previas_filt.columns else 0
-    tot_concluido_pro = len(df_previas_filt[df_previas_filt['Consultor PRO'] == 'Concluído 100%']) if 'Consultor PRO' in df_previas_filt.columns else 0
-    taxa_pro_conclusao = (tot_concluido_pro / total_previas_curso * 100) if total_previas_curso > 0 else 0
+    total_pro_concluidos = len(df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'concluído']) if 'Consultor PRO' in df_previas_filt.columns else 0
+    total_pro_pendentes = len(df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'pendente']) if 'Consultor PRO' in df_previas_filt.columns else 0
+    total_pro_sem_registro = len(df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'sem registro']) if 'Consultor PRO' in df_previas_filt.columns else 0
+    total_pro_sem_acesso = len(df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'sem acesso']) if 'Consultor PRO' in df_previas_filt.columns else 0
+    taxa_pro_conclusao = (total_pro_concluidos / total_previas_curso * 100) if total_previas_curso > 0 else 0
 
     mp_kpi1, mp_kpi2, mp_kpi3, mp_kpi4, mp_kpi5 = st.columns(5)
-    mp_kpi1.metric("Total Seleção", f"{total_previas_curso}")
-    mp_kpi2.metric("Não Iniciado", f"{tot_nao_iniciado}")
-    mp_kpi3.metric("Em Andamento", f"{tot_cursando}")
-    mp_kpi4.metric("Concluído 100%", f"{tot_concluido_pro}")
-    mp_kpi5.metric("Taxa Finalização", f"{taxa_pro_conclusao:.1f}%")
+    mp_kpi1.metric("Total na Seleção", f"{total_previas_curso}")
+    mp_kpi2.metric("PRO Concluído", f"{total_pro_concluidos}")
+    mp_kpi3.metric("PRO Pendente", f"{total_pro_pendentes}")
+    mp_kpi4.metric("PRO Sem Registro", f"{total_pro_sem_registro}")
+    mp_kpi5.metric("Taxa Conclusão PRO", f"{taxa_pro_conclusao:.1f}%")
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_mp_graf, col_mp_ranking = st.columns(2)
 
     with col_mp_graf:
-        st.subheader("📊 Proporção do Curso Consultor PRO")
+        st.subheader("📊 Proporção Curso Consultor PRO")
         if total_previas_curso > 0 and 'Consultor PRO' in df_previas_filt.columns:
             df_pro_count = df_previas_filt['Consultor PRO'].value_counts().reset_index()
             df_pro_count.columns = ['Status do Curso', 'Quantidade']
@@ -467,7 +448,7 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
             fig_donut_pro = px.pie(
                 df_pro_count, values='Quantidade', names='Status do Curso',
                 color='Status do Curso',
-                color_discrete_map={'Concluído 100%': '#002B49', 'Cursando (Em Andamento)': '#3389C5', 'Não Iniciado': '#94a3b8', 'Sem Acesso': '#e2e8f0'},
+                color_discrete_map={'Concluído': '#002B49', 'Pendente': '#3389C5', 'Sem Registro': '#94a3b8', 'Sem Acesso': '#e2e8f0'},
                 hole=0.5
             )
             fig_donut_pro.update_traces(textinfo='percent+label', textfont_size=14)
@@ -477,7 +458,7 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     with col_mp_ranking:
         st.subheader("🏆 Prévias: Top Supervisores com Pendência PRO")
         if not df_previas_filt.empty and 'Supervisor / PV' in df_previas_filt.columns and 'Consultor PRO' in df_previas_filt.columns:
-            df_pro_pendentes_calc = df_previas_filt[df_previas_filt['Consultor PRO'].isin(['Não Iniciado', 'Cursando (Em Andamento)'])]
+            df_pro_pendentes_calc = df_previas_filt[df_previas_filt['Consultor PRO'].str.lower() == 'pendente']
             if not df_pro_pendentes_calc.empty:
                 df_sup_pro_pend = df_pro_pendentes_calc['Supervisor / PV'].value_counts().head(8).reset_index()
                 df_sup_pro_pend.columns = ['Supervisor / PV', 'Pendências PRO']
@@ -560,6 +541,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
         sup_unicos = []
 
     with col_f_supervisor:
+        # Alterado de selectbox para multiselect
         supervisores_sel = st.multiselect("👔 Supervisor / Ponto de Venda:", sup_unicos, default=[])
 
     if supervisores_sel and 'Supervisor / PV' in df_filtrado.columns:
@@ -571,6 +553,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
         curso_unicos = []
 
     with col_f_curso:
+        # Alterado de selectbox para multiselect
         curso_sel = st.multiselect("🎓 Consultor de Sucesso:", curso_unicos, default=[])
 
     if curso_sel and 'Consultor de Sucesso' in df_filtrado.columns:
@@ -701,9 +684,9 @@ elif opcao_atual == "📈 Matrículas Concluídas":
     mg_kpi5.metric("Taxa de Conclusão", f"{taxa_conclusao:.1f}%")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    col_mp_graf, col_mp_ranking = st.columns(2)
+    col_mg_graf, col_mg_ranking = st.columns(2)
 
-    with col_mp_graf:
+    with col_mg_graf:
         st.subheader("📊 Proporção de Conclusão (Ativos)")
         if total_unid_curso > 0 and 'Consultor de Sucesso' in df_mg.columns:
             df_curso_count = df_mg['Consultor de Sucesso'].value_counts().reset_index()
@@ -719,7 +702,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
             fig_donut.update_layout(showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(t=20, b=20, l=20, r=20))
             st.plotly_chart(fig_donut, use_container_width=True)
 
-    with col_mp_ranking:
+    with col_mg_ranking:
         st.subheader("🏆 Top Supervisores com Pendências")
         if not df_mg.empty and 'Supervisor / PV' in df_mg.columns and 'Consultor de Sucesso' in df_mg.columns:
             df_pend = df_mg[df_mg['Consultor de Sucesso'].str.lower() == 'pendente']
