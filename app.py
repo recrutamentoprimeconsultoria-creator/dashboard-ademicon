@@ -692,12 +692,14 @@ elif opcao_atual == "📈 Matrículas Concluídas":
     tot_mg_sem_reg = len(df_mg[df_mg['Consultor de Sucesso'] == 'Sem Registro']) if 'Consultor de Sucesso' in df_mg.columns else 0
     taxa_conclusao = (tot_mg_concluido / total_unid_curso * 100) if total_unid_curso > 0 else 0
 
-    mg_kpi1, mg_kpi2, mg_kpi3, mg_kpi4, mg_kpi5 = st.columns(5)
+    # Atualizado para 6 colunas para acomodar Colaboradores Ativos, Não Iniciado, Cursando, Concluído 100%, Sem Registro e Taxa de Conclusão
+    mg_kpi1, mg_kpi2, mg_kpi3, mg_kpi4, mg_kpi5, mg_kpi6 = st.columns(6)
     mg_kpi1.metric("Colaboradores Ativos", f"{total_unid_curso}")
     mg_kpi2.metric("Não Iniciado", f"{tot_mg_nao_iniciado}")
     mg_kpi3.metric("Cursando", f"{tot_mg_cursando}")
     mg_kpi4.metric("Concluído 100%", f"{tot_mg_concluido}")
-    mg_kpi5.metric("Taxa de Conclusão", f"{taxa_conclusao:.1f}%")
+    mg_kpi5.metric("Sem Registro", f"{tot_mg_sem_reg}")
+    mg_kpi6.metric("Taxa de Conclusão", f"{taxa_conclusao:.1f}%")
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_mg_graf, col_mg_ranking = st.columns(2)
@@ -721,7 +723,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
     with col_mg_ranking:
         st.subheader("🏆 Top Supervisores com Pendências")
         if not df_mg.empty and 'Supervisor / PV' in df_mg.columns and 'Consultor de Sucesso' in df_mg.columns:
-            df_pend = df_mg[df_mg['Consultor de Sucesso'].isin(['Não Iniciado', 'Cursando (Em Andamento)'])]
+            df_pend = df_mg[df_mg['Consultor de Sucesso'].isin(['Não Iniciado', 'Cursando (Em Andamento)', 'Sem Registro'])]
             if not df_pend.empty:
                 df_sup_pend = df_pend['Supervisor / PV'].value_counts().head(8).reset_index()
                 df_sup_pend.columns = ['Supervisor / PV', 'Ocorrências']
