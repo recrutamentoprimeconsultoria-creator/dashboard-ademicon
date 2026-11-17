@@ -138,7 +138,6 @@ def load_data_cred():
     if 'Consultor (PF)' in df_total.columns:
         df_total['Consultor_Match'] = df_total['Consultor (PF)'].astype(str).str.strip().str.lower()
 
-    # Leitura refinada do Curso de Consultor de Sucesso (Matrículas Concluídas) cruzando Colunas D e E
     try:
         sheet_curso = client.open_by_url(SHEET_URL_CURSO_CRED)
         ws_curso = sheet_curso.get_worksheet(0)
@@ -147,9 +146,9 @@ def load_data_cred():
             lista_cursos = []
             for linha in dados_curso[1:]:
                 if len(linha) >= 5:
-                    nome_pessoa = str(linha[1]).strip() # Coluna B
-                    status_inicio = str(linha[3]).strip() if len(linha) > 3 else 'Pendente' # Coluna D (Início)
-                    status_fim = str(linha[4]).strip() if len(linha) > 4 else 'Pendente' # Coluna E (Finalização)
+                    nome_pessoa = str(linha[1]).strip()
+                    status_inicio = str(linha[3]).strip() if len(linha) > 3 else 'Pendente'
+                    status_fim = str(linha[4]).strip() if len(linha) > 4 else 'Pendente'
                     
                     if nome_pessoa and nome_pessoa.lower() not in ['', 'none', 'nan']:
                         inicio_txt = status_inicio if status_inicio else 'Pendente'
@@ -231,6 +230,12 @@ def load_data_previas():
     
     if 'Cidade' in df_previas.columns:
         df_previas['Cidade'] = df_previas['Cidade'].str.upper()
+
+    # Converter Data Abertura para formato datetime para permitir o filtro por período
+    if 'Data Abertura' in df_previas.columns:
+        df_previas['Data_Dt'] = pd.to_datetime(df_previas['Data Abertura'], errors='coerce', dayfirst=True)
+    else:
+        df_previas['Data_Dt'] = pd.NaT
 
     if 'Candidato' in df_previas.columns and 'Status do Processo' in df_previas.columns:
         df_previas = df_previas.dropna(subset=['Candidato', 'Status do Processo'])
@@ -493,11 +498,33 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     st.divider()
     st.subheader("📋 Funil de Candidatos - Acompanhamento do Supervisor")
     
+    # Adicionado seletor de intervalo de datas baseado na Data Abertura
+    col_d1, col_d2 = st.columns([2, 2])
+    with col_d1:
+        valid_dates = df_previas_filt['Data_Dt'].dropna()
+        if not valid_dates.empty:
+            min_d = valid_dates.min().date()
+            max_d = valid_dates.max().date()
+            filtro_data = st.date_input(
+                "📅 Filtrar por Período (Data Abertura):",
+                value=(min_d, max_d),
+                key="filtro_periodo_previas"
+            )
+        else:
+            filtro_data = None
+
+    df_p_tabela = df_previas_filt.copy()
+    
+    # Aplicar filtro de datas se o usuário selecionou um intervalo válido
+    if filtro_data and isinstance(filtro_data, tuple) and len(filtro_data) == 2:
+        start_date, end_date = filtro_data
+        mask_data = (df_p_tabela['Data_Dt'].dt.date >= start_date) & (df_p_tabela['Data_Dt'].dt.date <= end_date)
+        df_p_tabela = df_p_tabela[mask_data]
+
     col_p_busca, col_p_export = st.columns([3, 1])
     with col_p_busca:
         termo_p_busca = st.text_input("🔎 Pesquisar Candidato, Status, WhatsApp ou Cidade:")
 
-    df_p_tabela = df_previas_filt.copy()
     if termo_p_busca:
         cols_para_busca = [c for c in df_p_tabela.columns if df_p_tabela[c].dtype == 'object']
         mascara = pd.Series(False, index=df_p_tabela.index)
@@ -622,7 +649,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
                 text='Quantidade', color_discrete_sequence=['#002B49']
             )
             fig_sup.update_traces(textposition='outside')
-            fig_sup.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Total Ativos", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+            fig_sup.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Total Ativos", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", style={'width': '100%'})
             st.plotly_chart(fig_sup, use_container_width=True)
 
     st.divider()
@@ -692,7 +719,6 @@ elif opcao_atual == "📈 Matrículas Concluídas":
     tot_mg_sem_reg = len(df_mg[df_mg['Consultor de Sucesso'] == 'Sem Registro']) if 'Consultor de Sucesso' in df_mg.columns else 0
     taxa_conclusao = (tot_mg_concluido / total_unid_curso * 100) if total_unid_curso > 0 else 0
 
-    # Atualizado para 6 colunas para acomodar Colaboradores Ativos, Não Iniciado, Cursando, Concluído 100%, Sem Registro e Taxa de Conclusão
     mg_kpi1, mg_kpi2, mg_kpi3, mg_kpi4, mg_kpi5, mg_kpi6 = st.columns(6)
     mg_kpi1.metric("Colaboradores Ativos", f"{total_unid_curso}")
     mg_kpi2.metric("Não Iniciado", f"{tot_mg_nao_iniciado}")
