@@ -231,9 +231,11 @@ def load_data_previas():
     if 'Cidade' in df_previas.columns:
         df_previas['Cidade'] = df_previas['Cidade'].str.upper()
 
-    # Forçar formato brasileiro (dia/mes/ano) com dayfirst=True
+    # Tratamento da Data Abertura garantindo formato brasileiro DD/MM/AAAA para exibição
     if 'Data Abertura' in df_previas.columns:
         df_previas['Data_Dt'] = pd.to_datetime(df_previas['Data Abertura'], errors='coerce', dayfirst=True)
+        # Formata explicitamente para o padrão brasileiro DD/MM/YYYY na tabela
+        df_previas['Data Abertura'] = df_previas['Data_Dt'].dt.strftime('%d/%m/%Y').fillna(df_previas['Data Abertura'])
     else:
         df_previas['Data_Dt'] = pd.NaT
 
