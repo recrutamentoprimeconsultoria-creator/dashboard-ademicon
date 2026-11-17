@@ -231,7 +231,7 @@ def load_data_previas():
     if 'Cidade' in df_previas.columns:
         df_previas['Cidade'] = df_previas['Cidade'].str.upper()
 
-    # Converter Data Abertura para formato datetime para permitir o filtro por período
+    # Forçar formato brasileiro (dia/mes/ano) com dayfirst=True
     if 'Data Abertura' in df_previas.columns:
         df_previas['Data_Dt'] = pd.to_datetime(df_previas['Data Abertura'], errors='coerce', dayfirst=True)
     else:
@@ -498,7 +498,6 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
     st.divider()
     st.subheader("📋 Funil de Candidatos - Acompanhamento do Supervisor")
     
-    # Adicionado seletor de intervalo de datas baseado na Data Abertura
     col_d1, col_d2 = st.columns([2, 2])
     with col_d1:
         valid_dates = df_previas_filt['Data_Dt'].dropna()
@@ -515,7 +514,6 @@ elif opcao_atual == "📋 Prévias (Gestão de Candidatos)":
 
     df_p_tabela = df_previas_filt.copy()
     
-    # Aplicar filtro de datas se o usuário selecionou um intervalo válido
     if filtro_data and isinstance(filtro_data, tuple) and len(filtro_data) == 2:
         start_date, end_date = filtro_data
         mask_data = (df_p_tabela['Data_Dt'].dt.date >= start_date) & (df_p_tabela['Data_Dt'].dt.date <= end_date)
@@ -649,7 +647,7 @@ elif opcao_atual == "📈 Matrículas Concluídas":
                 text='Quantidade', color_discrete_sequence=['#002B49']
             )
             fig_sup.update_traces(textposition='outside')
-            fig_sup.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Total Ativos", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", style={'width': '100%'})
+            fig_sup.update_layout(yaxis=dict(autorange="reversed"), xaxis_title="Total Ativos", yaxis_title="", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_sup, use_container_width=True)
 
     st.divider()
